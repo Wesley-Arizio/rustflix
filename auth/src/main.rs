@@ -56,7 +56,7 @@ async fn main() -> Result<(), String> {
     let address = args
         .grpc_port
         .parse()
-        .expect("Could not parse auth gprc_port to a ScoketAddr");
+        .expect("Could not parse auth gprc_port to a SocketAddr");
     let auth_service = AuthService::default();
 
     Server::builder()

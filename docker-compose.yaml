@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  auth_mongo:
+    image: mongo
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=$MONGODB_USERNAME
+      - MONGO_INITDB_ROOT_PASSWORD=$MONGODB_PASSWORD
+    ports:
+      - $MONGODB_PORT:$MONGODB_PORT
