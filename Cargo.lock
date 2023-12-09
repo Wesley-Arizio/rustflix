@@ -145,7 +145,6 @@ dependencies = [
 name = "auth"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "clap",
  "dotenv",
  "futures",
@@ -153,6 +152,7 @@ dependencies = [
  "mongodb",
  "prost",
  "serde",
+ "thiserror",
  "tokio",
  "tonic",
 ]
