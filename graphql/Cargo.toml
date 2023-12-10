@@ -8,3 +8,5 @@ edition = "2021"
 [dependencies]
 juniper = "0.15.11"
 actix-web = "4.4.0"
+clap =  { version = "4.4.10", features = ["derive", "env"] }
+dotenv = "0.15.0"
