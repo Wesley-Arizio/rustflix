@@ -17,6 +17,7 @@ pub enum DatabaseError {
 
 impl From<SqlxError> for DatabaseError {
     fn from(value: SqlxError) -> Self {
+        eprintln!("sqlx error: {}", value);
         match value {
             SqlxError::ColumnNotFound(column_name) => Self::ColumnNotFound(column_name),
             SqlxError::Io(_) | SqlxError::Tls(_) => Self::CommunicationError,
