@@ -5,10 +5,10 @@ services:
     image: mongo
     restart: always
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=$MONGODB_USERNAME
-      - MONGO_INITDB_ROOT_PASSWORD=$MONGODB_PASSWORD
+      - MONGO_INITDB_ROOT_USERNAME=$AUTH_MONGODB_USERNAME
+      - MONGO_INITDB_ROOT_PASSWORD=$AUTH_MONGODB_PASSWORD
     ports:
-      - $MONGODB_PORT:$MONGODB_PORT
+      - $AUTH_MONGODB_PORT:$AUTH_MONGODB_PORT
 
   postgres:
     image: postgres:15

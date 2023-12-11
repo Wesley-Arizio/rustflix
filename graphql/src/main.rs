@@ -8,9 +8,8 @@ use actix_web::{
 use juniper::http::GraphQLRequest;
 use schemas::{create_schema, Schema};
 
-use grpc_interfaces::auth::auth_client::AuthClient;
-
 use clap::Parser;
+use grpc_interfaces::auth::auth_client::AuthClient;
 
 pub mod mutation;
 pub mod query;
@@ -36,6 +35,9 @@ struct Args {
 
     #[arg(env = "GRAPHQL_DATABASE_URL")]
     database_url: String,
+
+    #[arg(env = "GRAPHQL_AUTH_GRPC_PORT")]
+    auth_grpc_port: String,
 }
 
 pub struct AppState {
@@ -46,7 +48,7 @@ pub struct AppState {
 async fn main() -> Result<()> {
     dotenv::dotenv().expect("Could not parse environment variables");
     let args = Args::parse();
-    let auth_client = AuthClient::connect("http://[::1]:50051")
+    let auth_client = AuthClient::connect(args.auth_grpc_port.to_owned())
         .await
         .expect("Could not connect to auth grpc client");
 

@@ -14,23 +14,11 @@ use mongodb::{options::ClientOptions, Client};
 #[derive(Parser, Debug)]
 struct Cli {
     /// grpc port for Auth server
-    #[arg(short, env)]
+    #[arg(short, env = "AUTH_GRPC_PORT")]
     grpc_port: String,
 
-    /// database username
-    #[arg(env)]
-    mongodb_username: String,
-
-    /// database password
-    #[arg(env)]
-    mongodb_password: String,
-
-    /// database host
-    #[arg(env)]
-    mongodb_host: String,
-
-    #[arg(env)]
-    mongodb_port: String,
+    #[arg(env = "AUTH_MONGODB_URL")]
+    mongodb_url: String,
 }
 
 #[tokio::main]
@@ -38,17 +26,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv::dotenv().unwrap();
     let args = Cli::parse();
 
-    let mongodb_url = format!(
-        "mongodb://{}:{}@{}:{}",
-        args.mongodb_username, args.mongodb_password, args.mongodb_host, args.mongodb_port
-    );
-
     let address = args
         .grpc_port
         .parse()
         .expect("Could not parse socket address with given grpc port");
 
-    let client_options = ClientOptions::parse(&mongodb_url)
+    let client_options = ClientOptions::parse(&args.mongodb_url)
         .await
         .expect("error parsing client options");
 
