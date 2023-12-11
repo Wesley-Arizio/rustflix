@@ -19,6 +19,9 @@ struct Cli {
 
     #[arg(env = "AUTH_MONGODB_URL")]
     mongodb_url: String,
+
+    #[arg(env = "AUTH_DATABASE_NAME")]
+    database_name: String
 }
 
 #[tokio::main]
@@ -36,7 +39,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("error parsing client options");
 
     let client = Client::with_options(client_options).expect("error initializing mongodb client");
-    let collection = client.database("auth").collection("credentials");
+    let collection = client.database(&args.database_name).collection("credentials");
     let account_repository = AccountRepository::new(collection);
     let auth_service = AuthService::new(account_repository);
 
