@@ -8,14 +8,17 @@ use actix_web::{
 use juniper::http::GraphQLRequest;
 use schemas::{create_schema, Schema};
 
+use grpc_interfaces::auth::auth_client::AuthClient;
+
 use clap::Parser;
 
+pub mod mutation;
 pub mod query;
 pub mod schemas;
 
 use sqlx::{PgPool, Pool, Postgres};
 
-#[route("/graphql", method = "POST")]
+#[route("/graphql", method = "POST", method = "GET")]
 async fn graphql(
     schema: web::Data<Schema>,
     state: web::Data<AppState>,
@@ -43,12 +46,15 @@ pub struct AppState {
 async fn main() -> Result<()> {
     dotenv::dotenv().expect("Could not parse environment variables");
     let args = Args::parse();
+    let auth_client = AuthClient::connect("http://[::1]:50051")
+        .await
+        .expect("Could not connect to auth grpc client");
 
     let pool = PgPool::connect(&args.database_url)
         .await
         .expect("Could not connect to database");
 
-    let schema = Arc::new(create_schema());
+    let schema = Arc::new(create_schema(auth_client));
     let app = move || {
         App::new()
             .app_data(Data::from(Arc::clone(&schema)))

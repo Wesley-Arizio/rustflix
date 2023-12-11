@@ -1,13 +1,14 @@
-use crate::{query::QueryRoot, AppState};
-use juniper::{EmptyMutation, EmptySubscription, RootNode};
+use crate::{mutation::MutationRoot, query::QueryRoot, AppState};
+use grpc_interfaces::auth::auth_client::AuthClient;
+use juniper::{EmptySubscription, RootNode};
+use tonic::transport::Channel;
 
-pub type Schema =
-    RootNode<'static, QueryRoot, EmptyMutation<AppState>, EmptySubscription<AppState>>;
+pub type Schema = RootNode<'static, QueryRoot, MutationRoot, EmptySubscription<AppState>>;
 
-pub fn create_schema() -> Schema {
+pub fn create_schema(auth_client: AuthClient<Channel>) -> Schema {
     Schema::new(
         QueryRoot {},
-        EmptyMutation::<AppState>::default(),
+        MutationRoot::new(auth_client),
         EmptySubscription::<AppState>::default(),
     )
 }

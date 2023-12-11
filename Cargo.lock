@@ -1176,8 +1176,11 @@ dependencies = [
  "clap",
  "database",
  "dotenv",
+ "grpc-interfaces",
  "juniper",
  "sqlx",
+ "tokio",
+ "tonic",
 ]
 
 [[package]]
