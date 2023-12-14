@@ -14,8 +14,8 @@ pub enum RepositoryError {
 #[async_trait]
 pub trait Repository {
     type Entity;
-    type CreateEntityDTO;
-    async fn create(&self, entity: &Self::CreateEntityDTO)
+    type CreateEntityDAO;
+    async fn create(&self, entity: &Self::CreateEntityDAO)
         -> Result<Self::Entity, RepositoryError>;
     async fn exists(&self, identifier: &str) -> Result<bool, RepositoryError>;
 }

@@ -4,7 +4,7 @@ use grpc_interfaces::auth::{
     auth_server::Auth, CreateCredentialsRequest, CreateCredentialsResponse,
 };
 
-use crate::database::entities::account::{Account, AccountDTO};
+use crate::database::entities::account::{Account, CreateAccountDAO};
 
 use super::database::traits::{Repository, RepositoryError};
 
@@ -22,14 +22,14 @@ use tonic::{Code, Request, Response, Status};
 #[derive(Debug)]
 pub struct AuthService<R>
 where
-    R: Repository<Entity = Account, CreateEntityDTO = AccountDTO> + Send + Sync,
+    R: Repository<Entity = Account, CreateEntityDAO=CreateAccountDAO> + Send + Sync,
 {
     account_repository: R,
 }
 
 impl<R> AuthService<R>
 where
-    R: Repository<Entity = Account, CreateEntityDTO = AccountDTO> + Send + Sync,
+    R: Repository<Entity = Account, CreateEntityDAO = CreateAccountDAO> + Send + Sync,
 {
     pub fn new(repository: R) -> Self {
         Self {
@@ -42,7 +42,7 @@ where
 impl<R> Auth for AuthService<R>
 where
     R: 'static,
-    R: Repository<Entity = Account, CreateEntityDTO = AccountDTO> + Send + Sync,
+    R: Repository<Entity = Account, CreateEntityDAO=CreateAccountDAO> + Send + Sync,
 {
     async fn create_credential(
         &self,
@@ -56,7 +56,7 @@ where
             return Err(Status::new(Code::Unknown, "Invalid Credentials"));
         };
 
-        let dto = AccountDTO {
+        let dto = CreateAccountDAO {
             email: inner.email,
             password: inner.password,
         };

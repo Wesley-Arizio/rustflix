@@ -1,5 +1,5 @@
 use super::{
-    entities::account::{Account, AccountDTO},
+    entities::account::{Account, CreateAccountDAO},
     traits::{Repository, RepositoryError},
 };
 
@@ -28,9 +28,9 @@ impl AccountRepository {
 #[async_trait]
 impl Repository for AccountRepository {
     type Entity = Account;
-    type CreateEntityDTO = AccountDTO;
+    type CreateEntityDAO = CreateAccountDAO;
 
-    async fn create(&self, entity: &AccountDTO) -> Result<Account, RepositoryError> {
+    async fn create(&self, entity: &CreateAccountDAO) -> Result<Account, RepositoryError> {
         let account = entity.into();
         let _ = self.collection.insert_one(&account, None).await?;
 

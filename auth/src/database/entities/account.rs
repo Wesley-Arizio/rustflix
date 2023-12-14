@@ -9,13 +9,13 @@ pub struct Account {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct AccountDTO {
+pub struct CreateAccountDAO {
     pub email: String,
     pub password: String,
 }
 
-impl From<&AccountDTO> for Account {
-    fn from(value: &AccountDTO) -> Self {
+impl From<&CreateAccountDAO> for Account {
+    fn from(value: &CreateAccountDAO) -> Self {
         Self {
             _id: Uuid::new().to_string(),
             email: value.email.to_owned(),
