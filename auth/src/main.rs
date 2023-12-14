@@ -1,16 +1,19 @@
 use grpc_interfaces::auth::auth_server::AuthServer;
 use tonic::transport::Server;
 
-use auth::AuthService;
+use grpc::GRPCAuthService;
 
 use clap::Parser;
 
 mod auth;
 mod database;
+mod grpc;
 
 use database::account_repository::AccountRepository;
 
 use mongodb::{options::ClientOptions, Client};
+use crate::auth::AuthService;
+
 #[derive(Parser, Debug)]
 struct Cli {
     /// grpc port for Auth server
@@ -44,6 +47,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .collection("credentials");
     let account_repository = AccountRepository::new(collection);
     let auth_service = AuthService::new(account_repository);
+    let auth_service = GRPCAuthService::new(auth_service);
 
     Server::builder()
         .add_service(AuthServer::new(auth_service))

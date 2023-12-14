@@ -3,15 +3,13 @@ use super::{
     traits::{Repository, RepositoryError},
 };
 
-use mongodb::{bson::doc, error::Error, Collection};
+use mongodb::{bson::doc, Collection};
 
 use tonic::async_trait;
 
-impl From<Error> for RepositoryError {
-    fn from(value: Error) -> Self {
-        match value {
-            Error { kind, .. } => RepositoryError::DatabaseError { source: kind },
-        }
+impl From<mongodb::error::Error> for RepositoryError {
+    fn from(value: mongodb::error::Error) -> Self {
+        RepositoryError::DatabaseError { source: value.kind }
     }
 }
 
@@ -47,5 +45,15 @@ impl Repository for AccountRepository {
             0 => Ok(false),
             _ => Ok(true),
         }
+    }
+}
+
+#[cfg(tests)]
+mod tests {
+    #[test]
+    fn test_account_repository() {
+        // create account
+        // verify if the newly created account exists
+        // verify if a non-existing account exists
     }
 }
