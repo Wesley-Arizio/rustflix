@@ -17,6 +17,7 @@ futures = "0.3.29"
 thiserror = "1.0.50"
 async-trait = "0.1.74"
 mockall = "0.12.0"
+regex = "1.10.2"
 
 [dependencies.mongodb]
 version = "2.7.1"

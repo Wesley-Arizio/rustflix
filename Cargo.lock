@@ -378,6 +378,7 @@ dependencies = [
  "mockall",
  "mongodb",
  "prost",
+ "regex",
  "serde",
  "thiserror",
  "tokio",

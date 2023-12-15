@@ -2,6 +2,7 @@ use crate::database::entities::account::{Account, CreateAccountDAO};
 use std::error::Error;
 
 use super::database::traits::{Repository, RepositoryError};
+use regex::Regex;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum AuthServiceError {
@@ -42,6 +43,15 @@ where
         email: &str,
         password: &str,
     ) -> Result<String, AuthServiceError> {
+        let regex = Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").map_err(|e| {
+            eprintln!("regex pattern error: {:?}", e);
+            AuthServiceError::InternalServerError
+        })?;
+
+        if !regex.is_match(email) {
+            return Err(AuthServiceError::InvalidInput { message: "invalid email".to_string() })
+        };
+
         let exists = self.account_repository.exists(email).await?;
 
         if exists {
@@ -113,4 +123,31 @@ mod tests {
             .unwrap_err();
         assert_eq!(result, AuthServiceError::InvalidCredentials);
     }
+
+    #[tokio::test]
+    async fn test_create_account_invalid_email() {
+        let mut mock = MockFakeRepository::new();
+        mock.expect_exists().times(0);
+        mock.expect_create().times(0);
+
+        let service = AuthService::new(mock);
+        let result = service
+            .create_account("test.com", "test123456")
+            .await
+            .unwrap_err();
+        assert_eq!(result, AuthServiceError::InvalidInput { message: "invalid email".to_string() });
+
+        let result = service
+            .create_account("test@", "test123456")
+            .await
+            .unwrap_err();
+        assert_eq!(result, AuthServiceError::InvalidInput { message: "invalid email".to_string() });
+
+        let result = service
+            .create_account("test", "test123456")
+            .await
+            .unwrap_err();
+        assert_eq!(result, AuthServiceError::InvalidInput { message: "invalid email".to_string() });
+    }
+
 }
