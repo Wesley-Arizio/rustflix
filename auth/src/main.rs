@@ -11,8 +11,8 @@ mod grpc;
 
 use database::account_repository::AccountRepository;
 
-use mongodb::{options::ClientOptions, Client};
 use crate::auth::AuthService;
+use mongodb::{options::ClientOptions, Client};
 
 #[derive(Parser, Debug)]
 struct Cli {
