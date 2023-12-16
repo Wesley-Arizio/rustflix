@@ -2,6 +2,7 @@ use crate::database::entities::account::{Account, CreateAccountDAO};
 use std::error::Error;
 
 use super::database::traits::{Repository, RepositoryError};
+use crate::password_helper::{PasswordHelper, PasswordHelperError};
 use regex::Regex;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -16,6 +17,13 @@ impl From<RepositoryError> for AuthServiceError {
         if let Some(source) = value.source() {
             eprintln!("{:?}", source);
         }
+        Self::InternalServerError
+    }
+}
+
+impl From<PasswordHelperError> for AuthServiceError {
+    fn from(e: PasswordHelperError) -> Self {
+        eprintln!("Password helper error: {:?}", e);
         Self::InternalServerError
     }
 }
@@ -43,13 +51,16 @@ where
         email: &str,
         password: &str,
     ) -> Result<String, AuthServiceError> {
-        let regex = Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").map_err(|e| {
-            eprintln!("regex pattern error: {:?}", e);
-            AuthServiceError::InternalServerError
-        })?;
+        let regex =
+            Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").map_err(|e| {
+                eprintln!("regex pattern error: {:?}", e);
+                AuthServiceError::InternalServerError
+            })?;
 
         if !regex.is_match(email) {
-            return Err(AuthServiceError::InvalidInput { message: "invalid email".to_string() })
+            return Err(AuthServiceError::InvalidInput {
+                message: "invalid email".to_string(),
+            });
         };
 
         let exists = self.account_repository.exists(email).await?;
@@ -58,21 +69,20 @@ where
             return Err(AuthServiceError::InvalidCredentials);
         };
 
-        // TODO - Hash password
         let dto = CreateAccountDAO {
             email: email.to_owned(),
-            password: password.to_owned(),
+            password: PasswordHelper::hash_password(&password)?,
         };
 
         let res = self.account_repository.create(&dto).await?;
+
         Ok(res._id)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::auth::{AuthService, AuthServiceError};
-    use crate::database::entities::account::{Account, CreateAccountDAO};
+    use super::*;
     use crate::database::traits::MockFakeRepository;
     use mockall::predicate::*;
     #[tokio::test]
@@ -86,15 +96,15 @@ mod tests {
 
         mock.expect_create()
             .times(1)
-            .with(eq(CreateAccountDAO {
-                email: "test@gmail.com".to_string(),
-                password: "test123456".to_string(), // TODO - hash password
-            }))
+            .withf(|input| {
+                assert_eq!(input.email, "test@gmail.com");
+                true
+            })
             .return_once(|_| {
                 Ok(Account {
                     _id: String::from("1234"),
                     email: "test@gmail.com".to_string(),
-                    password: "test123456".to_string(),
+                    password: "hash...".to_string(),
                 })
             });
 
@@ -135,19 +145,33 @@ mod tests {
             .create_account("test.com", "test123456")
             .await
             .unwrap_err();
-        assert_eq!(result, AuthServiceError::InvalidInput { message: "invalid email".to_string() });
+        assert_eq!(
+            result,
+            AuthServiceError::InvalidInput {
+                message: "invalid email".to_string()
+            }
+        );
 
         let result = service
             .create_account("test@", "test123456")
             .await
             .unwrap_err();
-        assert_eq!(result, AuthServiceError::InvalidInput { message: "invalid email".to_string() });
+        assert_eq!(
+            result,
+            AuthServiceError::InvalidInput {
+                message: "invalid email".to_string()
+            }
+        );
 
         let result = service
             .create_account("test", "test123456")
             .await
             .unwrap_err();
-        assert_eq!(result, AuthServiceError::InvalidInput { message: "invalid email".to_string() });
+        assert_eq!(
+            result,
+            AuthServiceError::InvalidInput {
+                message: "invalid email".to_string()
+            }
+        );
     }
-
 }

@@ -8,6 +8,7 @@ use clap::Parser;
 mod auth;
 mod database;
 mod grpc;
+mod password_helper;
 
 use database::account_repository::AccountRepository;
 
