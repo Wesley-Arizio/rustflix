@@ -46,27 +46,15 @@ impl EntityRepository<Postgres, UserDAO, UserDAO, UpdateUserDAO, UserBy, UsersWh
             .map_err(DatabaseError::from)
     }
 
-    async fn try_get(db: &Pool<Postgres>, key: UserBy) -> Result<Option<UserDAO>, DatabaseError> {
+    async fn delete(db: &Pool<Postgres>, key: UserBy) -> Result<UserDAO, DatabaseError> {
         match key {
             UserBy::Id(uuid) => {
-                sqlx::query_as("SELECT id, name, birthday, active FROM users WHERE id = $1;")
+                sqlx::query_as::<_, UserDAO>("UPDATE users SET active = false WHERE id = $1 RETURNING id, name, active, birthday;")
                     .bind(uuid)
-                    .fetch_optional(db)
+                    .fetch_one(db)
                     .await
                     .map_err(DatabaseError::from)
             }
-        }
-    }
-
-    async fn get(db: &Pool<Postgres>, key: UserBy) -> Result<UserDAO, DatabaseError> {
-        match key {
-            UserBy::Id(uuid) => sqlx::query_as::<_, UserDAO>(
-                "SELECT id, name, birthday, active FROM users WHERE id = $1 LIMIT 1;",
-            )
-            .bind(uuid)
-            .fetch_one(db)
-            .await
-            .map_err(DatabaseError::from),
         }
     }
 
@@ -87,12 +75,24 @@ impl EntityRepository<Postgres, UserDAO, UserDAO, UpdateUserDAO, UserBy, UsersWh
         }
     }
 
-    async fn delete(db: &Pool<Postgres>, key: UserBy) -> Result<UserDAO, DatabaseError> {
+    async fn get(db: &Pool<Postgres>, key: UserBy) -> Result<UserDAO, DatabaseError> {
+        match key {
+            UserBy::Id(uuid) => sqlx::query_as::<_, UserDAO>(
+                "SELECT id, name, birthday, active FROM users WHERE id = $1 LIMIT 1;",
+            )
+            .bind(uuid)
+            .fetch_one(db)
+            .await
+            .map_err(DatabaseError::from),
+        }
+    }
+
+    async fn try_get(db: &Pool<Postgres>, key: UserBy) -> Result<Option<UserDAO>, DatabaseError> {
         match key {
             UserBy::Id(uuid) => {
-                sqlx::query_as::<_, UserDAO>("UPDATE users SET active = false WHERE id = $1 RETURNING id, name, active, birthday;")
+                sqlx::query_as("SELECT id, name, birthday, active FROM users WHERE id = $1;")
                     .bind(uuid)
-                    .fetch_one(db)
+                    .fetch_optional(db)
                     .await
                     .map_err(DatabaseError::from)
             }
