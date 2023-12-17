@@ -3,7 +3,7 @@
 members = [
   "auth",
   "grpc-interfaces",
-  "graphql",
+  "graphql-core",
   "database",
   "core"
 ]
