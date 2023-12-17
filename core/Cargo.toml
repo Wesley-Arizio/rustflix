@@ -1,17 +1,13 @@
 [package]
-name = "graphql"
+name = "core"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-juniper = "0.15.11"
-actix-web = "4.4.0"
-clap =  { version = "4.4.10", features = ["derive", "env"] }
 database = { path = "../database" }
-dotenv = "0.15.0"
 grpc-interfaces = { path = "../grpc-interfaces" }
-core = { path = "../core" }
 tonic = "0.10.2"
+thiserror = "1.0.50"
 tokio =  {version = "1.35.0", features = ["sync"]}

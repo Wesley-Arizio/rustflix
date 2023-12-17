@@ -4,5 +4,6 @@ members = [
   "auth",
   "grpc-interfaces",
   "graphql",
-  "database"
+  "database",
+  "core"
 ]
