@@ -22,7 +22,6 @@ impl From<argon2::password_hash::Error> for PasswordHelperError {
 impl PasswordHelper {
     pub fn hash_password(password: &str) -> Result<String, PasswordHelperError> {
         let salt = SaltString::generate(&mut OsRng);
-        println!("salt: {}", salt);
 
         // Argon2 with default params (Argon2id v19)
         let argon2 = Argon2::default();
@@ -54,7 +53,15 @@ mod tests {
         assert!(!PasswordHelper::verify(&hash, "12345").unwrap());
 
         // Hash generated here https://argon2.online/
-        assert!(PasswordHelper::verify("$argon2i$v=19$m=16,t=2,p=1$NHo1NGtha1JqV2hRMXEvOE1TQitFQQ$O6xjGjMkhshoWFMFsaB3IA", "any other test").unwrap());
-        assert!(!PasswordHelper::verify("$argon2i$v=19$m=16,t=2,p=1$NHo1NGtha1JqV2hRMXEvOE1TQitFQQ$O6xjGjMkhshoWFMFsaB3IA", "any other test2").unwrap());
+        assert!(PasswordHelper::verify(
+            "$argon2i$v=19$m=16,t=2,p=1$NHo1NGtha1JqV2hRMXEvOE1TQitFQQ$O6xjGjMkhshoWFMFsaB3IA",
+            "any other test"
+        )
+        .unwrap());
+        assert!(!PasswordHelper::verify(
+            "$argon2i$v=19$m=16,t=2,p=1$NHo1NGtha1JqV2hRMXEvOE1TQitFQQ$O6xjGjMkhshoWFMFsaB3IA",
+            "any other test2"
+        )
+        .unwrap());
     }
 }
