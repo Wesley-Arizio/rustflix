@@ -58,7 +58,7 @@ impl MutationRoot {
             .core
             .create_account(user.email, user.password, user.name)
             .await
-            .map_err(|e| FieldError::from(e))?; // TODO - Map CoreError to FieldError
+            .map_err(|e| FieldError::from(e.to_string()))?; // TODO - Map CoreError to FieldError
 
         Ok(response.into())
     }

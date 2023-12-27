@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::fmt::{Display, Formatter};
 use crate::dto::user::UserDTO;
 use database::{
     connection::{Pool, Postgres},
@@ -11,31 +12,37 @@ use grpc_interfaces::auth::CreateCredentialsRequest;
 use std::str::FromStr;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use thiserror::Error;
 use tonic::transport::Channel;
 use tonic::{Code, Request, Status};
 use database::traits::DatabaseError;
 
-#[derive(Debug, Error)]
+
+#[derive(Debug)]
 pub enum CoreError {
-    #[error("Internal server error")]
     InternalServerError,
 
-    #[error("Invalid credentials")]
     InvalidCredentials,
 
-    #[error("Invalid argument: {0}")]
     InvalidArgument(String),
 
-    #[error("{0} not found")]
     NotFound(String)
 }
 
+impl Display for CoreError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CoreError::InternalServerError => write!(f, "Internal Server Error"),
+            CoreError::InvalidCredentials => write!(f, "Invalid Credentials"),
+            CoreError::InvalidArgument(msg) => write!(f, "Invalid Argument: {:?}", msg),
+            CoreError::NotFound(entity) => write!(f, "{:?} Not Found", entity),
+        }
+    }
+}
+
+impl Error for CoreError {}
+
 impl From<Status> for CoreError {
     fn from(value: Status) -> Self {
-        if let Some(s) = value.source() {
-            eprintln!("core error source: {:?}", s)
-        }
         match value.code() {
             Code::Unauthenticated => CoreError::InvalidCredentials,
             Code::InvalidArgument => CoreError::InvalidArgument(value.message().to_string()),
