@@ -1,6 +1,5 @@
-use std::error::Error;
-use std::fmt::{Display, Formatter};
 use crate::dto::user::UserDTO;
+use database::traits::DatabaseError;
 use database::{
     connection::{Pool, Postgres},
     entities::users::{UserDAO, UserRepository},
@@ -9,13 +8,13 @@ use database::{
 };
 use grpc_interfaces::auth::auth_client::AuthClient;
 use grpc_interfaces::auth::CreateCredentialsRequest;
+use std::error::Error;
+use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tonic::transport::Channel;
 use tonic::{Code, Request, Status};
-use database::traits::DatabaseError;
-
 
 #[derive(Debug)]
 pub enum CoreError {
@@ -25,7 +24,7 @@ pub enum CoreError {
 
     InvalidArgument(String),
 
-    NotFound(String)
+    NotFound(String),
 }
 
 impl Display for CoreError {
@@ -46,7 +45,7 @@ impl From<Status> for CoreError {
         match value.code() {
             Code::Unauthenticated => CoreError::InvalidCredentials,
             Code::InvalidArgument => CoreError::InvalidArgument(value.message().to_string()),
-            _ => CoreError::InternalServerError
+            _ => CoreError::InternalServerError,
         }
     }
 }
@@ -55,14 +54,14 @@ impl From<DatabaseError> for CoreError {
     fn from(value: DatabaseError) -> Self {
         match value {
             DatabaseError::NotFound(entity) => CoreError::NotFound(entity),
-            _ => CoreError::InternalServerError
+            _ => CoreError::InternalServerError,
         }
     }
 }
 
 pub struct Core {
     auth_client: Arc<Mutex<AuthClient<Channel>>>,
-    db: Pool<Postgres>
+    db: Pool<Postgres>,
 }
 
 impl Core {
