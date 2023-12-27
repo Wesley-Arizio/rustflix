@@ -54,6 +54,8 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           components: clippy
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v2
       - name: cargo clippy
         uses: actions-rs/clippy-check@v1
         with:
@@ -70,6 +72,8 @@ jobs:
           submodules: true
       - name: Install nightly
         uses: dtolnay/rust-toolchain@nightly
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v2
       - name: cargo doc
         run: cargo doc --no-deps --all-features
         env:
@@ -85,6 +89,8 @@ jobs:
           submodules: true
       - name: Install stable
         uses: dtolnay/rust-toolchain@stable
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v2
       - name: cargo install cargo-hack
         uses: taiki-e/install-action@cargo-hack
       # intentionally no target specifier; see https://github.com/jonhoo/rust-ci-conf/pull/4
@@ -101,6 +107,8 @@ jobs:
         msrv: ["1.56.1"] # 2021 edition requires 1.56
     name: ubuntu / ${{ matrix.msrv }}
     steps:
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v2
       - uses: actions/checkout@v4
         with:
           submodules: true
