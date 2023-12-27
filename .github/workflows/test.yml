@@ -26,6 +26,8 @@ jobs:
         # toolchain
         toolchain: [stable, beta]
     steps:
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v2
       - uses: actions/checkout@v4
         with:
           submodules: true
@@ -69,6 +71,8 @@ jobs:
     runs-on: ubuntu-latest
     name: ubuntu / stable / minimal-versions
     steps:
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v2
       - uses: actions/checkout@v4
         with:
           submodules: true
