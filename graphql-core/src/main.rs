@@ -10,7 +10,7 @@ use schemas::{create_schema, Schema};
 
 use clap::Parser;
 
-use database::connection::{PgPool};
+use database::connection::PgPool;
 
 pub mod mutation;
 pub mod query;
@@ -19,10 +19,7 @@ pub mod schemas;
 use core::service::Core;
 
 #[route("/graphql", method = "POST", method = "GET")]
-async fn graphql(
-    schema: web::Data<Schema>,
-    data: web::Json<GraphQLRequest>,
-) -> impl Responder {
+async fn graphql(schema: web::Data<Schema>, data: web::Json<GraphQLRequest>) -> impl Responder {
     let response = data.execute(&schema, &()).await;
     HttpResponse::Ok().json(response)
 }

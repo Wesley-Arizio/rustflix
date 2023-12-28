@@ -1,5 +1,5 @@
+use core::{dto::user::UserDTO, service::Core};
 use juniper::{graphql_object, FieldError, FieldResult, GraphQLInputObject};
-use core::{service::Core, dto::user::UserDTO};
 
 pub struct MutationRoot {
     core: Core,
@@ -46,7 +46,7 @@ impl From<UserDTO> for User {
         Self {
             id: value.id.to_string(),
             name: value.name,
-            active: value.active
+            active: value.active,
         }
     }
 }
