@@ -18,7 +18,7 @@ impl MutationRoot {
     async fn create_account(&self, user: UserInput) -> FieldResult<User> {
         let response = self
             .core
-            .create_account(user.email, user.password, user.name)
+            .create_account(user.email, user.password, user.name, user.birthday.0)
             .await
             .map_err(|e| FieldError::from(e.to_string()))?; // TODO - Map CoreError to FieldError
 

@@ -1,3 +1,4 @@
+use crate::input::Birthday;
 use core::dto::user::UserDTO;
 use juniper::graphql_object;
 
@@ -6,6 +7,7 @@ pub struct User {
     pub id: String,
     pub name: String,
     pub active: bool,
+    pub birthday: Birthday,
 }
 
 #[graphql_object]
@@ -21,6 +23,10 @@ impl User {
     fn active(&self) -> bool {
         self.active
     }
+
+    fn birthday(&self) -> &Birthday {
+        &self.birthday
+    }
 }
 
 impl From<UserDTO> for User {
@@ -29,6 +35,7 @@ impl From<UserDTO> for User {
             id: value.id.to_string(),
             name: value.name,
             active: value.active,
+            birthday: Birthday(value.birthday),
         }
     }
 }
