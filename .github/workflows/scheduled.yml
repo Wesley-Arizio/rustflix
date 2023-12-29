@@ -55,6 +55,14 @@ jobs:
       - name: cargo update
         if: hashFiles('Cargo.lock') != ''
         run: cargo update
+      - name: up postgres database
+        run: docker-compose up -d postgres
+        env:
+          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
       - name: cargo test
         if: hashFiles('Cargo.lock') != ''
         run: cargo test --locked --all-features --all-targets
