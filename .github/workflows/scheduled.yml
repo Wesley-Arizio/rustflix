@@ -28,31 +28,6 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
       - name: Install Protoc
         uses: arduino/setup-protoc@v2
-      - name: Set up Docker
-        run: |
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            choco install docker-desktop -y
-            docker --version
-          else
-            sudo apt-get update
-            sudo apt-get install -y docker.io
-            sudo usermod -aG docker $USER
-            sudo systemctl start docker
-            sudo systemctl enable docker
-            docker --version
-          fi
-
-      - name: Set up Docker Compose
-        run: |
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
-          Invoke-WebRequest -Uri https://github.com/docker/compose/releases/latest/download/docker-compose-Windows-x86_64.exe -OutFile docker-compose.exe
-          Move-Item -Path docker-compose.exe -Destination "$env:ProgramFiles\Docker\docker-compose.exe"
-          docker-compose --version
-          else
-          sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-          docker-compose --version
-          fi
       - name: setup postgres database
         run: docker-compose up -d postgres
         env:
@@ -99,31 +74,6 @@ jobs:
       - name: cargo update
         if: hashFiles('Cargo.lock') != ''
         run: cargo update
-      - name: Set up Docker
-        run: |
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            choco install docker-desktop -y
-            docker --version
-          else
-            sudo apt-get update
-            sudo apt-get install -y docker.io
-            sudo usermod -aG docker $USER
-            sudo systemctl start docker
-            sudo systemctl enable docker
-            docker --version
-          fi
-
-      - name: Set up Docker Compose
-        run: |
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
-          Invoke-WebRequest -Uri https://github.com/docker/compose/releases/latest/download/docker-compose-Windows-x86_64.exe -OutFile docker-compose.exe
-          Move-Item -Path docker-compose.exe -Destination "$env:ProgramFiles\Docker\docker-compose.exe"
-          docker-compose --version
-          else
-          sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-          docker-compose --version
-          fi
       - name: setup postgres database
         run: docker-compose up -d postgres
         env:
