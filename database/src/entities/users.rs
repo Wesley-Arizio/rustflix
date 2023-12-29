@@ -106,7 +106,7 @@ mod tests {
     use crate::connection::PgPool;
     use crate::entities::users::{UpdateUserDAO, UserBy, UserDAO, UserRepository};
     use crate::traits::EntityRepository;
-    use sqlx::types::{uuid::Uuid, chrono::Utc};
+    use sqlx::types::{chrono::Utc, uuid::Uuid};
 
     #[tokio::test]
     async fn test_db() {
@@ -128,7 +128,9 @@ mod tests {
         .expect("Could not create user");
 
         // get user
-        let found = UserRepository::get(&pool, UserBy::Id(response.id)).await.expect("User not found");
+        let found = UserRepository::get(&pool, UserBy::Id(response.id))
+            .await
+            .expect("User not found");
 
         assert_eq!(response.id, found.id);
         assert_eq!(response.name, found.name);
@@ -136,7 +138,10 @@ mod tests {
         assert!(response.active);
 
         // try_get user, returns none if user isn't found
-        let found = UserRepository::try_get(&pool, UserBy::Id(response.id)).await.unwrap().unwrap();
+        let found = UserRepository::try_get(&pool, UserBy::Id(response.id))
+            .await
+            .unwrap()
+            .unwrap();
 
         assert_eq!(response.id, found.id);
         assert_eq!(response.name, found.name);
@@ -144,16 +149,24 @@ mod tests {
         assert!(found.active);
 
         // update
-        let updated = UserRepository::update(&pool, UserBy::Id(response.id), UpdateUserDAO {
-            name: "Masashi".to_string()
-        }).await.expect("Could not update user");
+        let updated = UserRepository::update(
+            &pool,
+            UserBy::Id(response.id),
+            UpdateUserDAO {
+                name: "Masashi".to_string(),
+            },
+        )
+        .await
+        .expect("Could not update user");
 
         assert_eq!(response.id, updated.id);
         assert_eq!(updated.name, "Masashi");
         assert!(updated.active);
 
         // delete
-        let deleted = UserRepository::delete(&pool, UserBy::Id(response.id)).await.expect("Could not delete an user");
+        let deleted = UserRepository::delete(&pool, UserBy::Id(response.id))
+            .await
+            .expect("Could not delete an user");
         assert_eq!(response.id, deleted.id);
         assert!(!deleted.active);
     }
