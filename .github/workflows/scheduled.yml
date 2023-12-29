@@ -40,6 +40,8 @@ jobs:
     # to).
     runs-on: ubuntu-latest
     name: ubuntu / beta / updated
+    env:
+      TEST_CORE_DATABASE_URL: ${{ secrets.TEST_CORE_DATABASE_URL }}
     # There's no point running this if no Cargo.lock was checked in in the first place, since we'd
     # just redo what happened in the regular test job. Unfortunately, hashFiles only works in if on
     # steps, so we repeat it.

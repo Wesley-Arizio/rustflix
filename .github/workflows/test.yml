@@ -49,6 +49,8 @@ jobs:
     # codecov.io
     runs-on: ubuntu-latest
     name: ubuntu / stable / coverage
+    env:
+      TEST_CORE_DATABASE_URL: ${{ secrets.TEST_CORE_DATABASE_URL }}
     steps:
       - name: Install Protoc
         uses: arduino/setup-protoc@v2
