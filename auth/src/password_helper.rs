@@ -31,7 +31,7 @@ impl PasswordHelper {
 
         Ok(password_hash.to_string())
     }
-
+    #[allow(dead_code)]
     pub fn verify(hash_password: &str, password: &str) -> Result<bool, PasswordHelperError> {
         let parsed_hash = PasswordHash::new(&hash_password)?;
         let result = Argon2::default().verify_password(password.as_bytes(), &parsed_hash);

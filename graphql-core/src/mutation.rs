@@ -1,7 +1,7 @@
 use crate::input::UserInput;
 use crate::output::User;
 use core::service::Core;
-use juniper::{graphql_object, FieldError, FieldResult, Value};
+use juniper::{graphql_object, FieldError, FieldResult};
 
 pub struct MutationRoot {
     core: Core,
