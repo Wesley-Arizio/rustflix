@@ -1,5 +1,6 @@
 use crate::dto::user::UserDTO;
 use database::traits::DatabaseError;
+use database::types::DateTime;
 use database::{
     connection::{Pool, Postgres},
     entities::users::{UserDAO, UserRepository},
@@ -84,12 +85,12 @@ impl Core {
         email: String,
         password: String,
         name: String,
+        birthday: DateTime<Utc>,
     ) -> Result<UserDTO, CoreError> {
         let mut auth_client = self.auth_client.lock().await;
 
         let request = CreateCredentialsRequest { email, password };
 
-        // TODO - create scalar value for birthday
         let response = auth_client
             .create_credential(Request::new(request))
             .await
@@ -100,7 +101,7 @@ impl Core {
             &self.db,
             UserDAO {
                 id: Uuid::from_str(&response.user_id).unwrap(),
-                birthday: Utc::now(),
+                birthday,
                 active: true,
                 name,
             },

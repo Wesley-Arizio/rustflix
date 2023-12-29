@@ -12,7 +12,9 @@ use clap::Parser;
 
 use database::connection::PgPool;
 
+mod input;
 pub mod mutation;
+mod output;
 pub mod query;
 pub mod schemas;
 

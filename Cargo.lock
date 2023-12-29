@@ -1221,6 +1221,7 @@ name = "graphql-core"
 version = "0.1.0"
 dependencies = [
  "actix-web",
+ "chrono",
  "clap",
  "core",
  "database",
