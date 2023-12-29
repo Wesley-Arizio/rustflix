@@ -850,6 +850,7 @@ name = "database"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "dotenv",
  "sqlx",
  "tokio",
  "uuid 1.6.1",

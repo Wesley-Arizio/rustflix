@@ -107,10 +107,14 @@ mod tests {
     use crate::entities::users::{UpdateUserDAO, UserBy, UserDAO, UserRepository};
     use crate::traits::EntityRepository;
     use sqlx::types::{chrono::Utc, uuid::Uuid};
+    use dotenv;
+
 
     #[tokio::test]
     async fn test_db() {
-        let pool = PgPool::connect("postgres://root:123456@localhost:5432/rustflix")
+        dotenv::dotenv().ok();
+        let url = std::env::var("TEST_CORE_DATABASE_URL").expect("TEST_CORE_DATABASE_URL must be set");
+        let pool = PgPool::connect(&url)
             .await
             .unwrap();
 
