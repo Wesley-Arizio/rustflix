@@ -106,17 +106,15 @@ mod tests {
     use crate::connection::PgPool;
     use crate::entities::users::{UpdateUserDAO, UserBy, UserDAO, UserRepository};
     use crate::traits::EntityRepository;
-    use sqlx::types::{chrono::Utc, uuid::Uuid};
     use dotenv;
-
+    use sqlx::types::{chrono::Utc, uuid::Uuid};
 
     #[tokio::test]
     async fn test_db() {
         dotenv::dotenv().ok();
-        let url = std::env::var("TEST_CORE_DATABASE_URL").expect("TEST_CORE_DATABASE_URL must be set");
-        let pool = PgPool::connect(&url)
-            .await
-            .unwrap();
+        let url =
+            std::env::var("TEST_CORE_DATABASE_URL").expect("TEST_CORE_DATABASE_URL must be set");
+        let pool = PgPool::connect(&url).await.unwrap();
 
         // create user
         let response = UserRepository::insert(
