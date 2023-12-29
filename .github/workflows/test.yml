@@ -72,6 +72,10 @@ jobs:
           AUTH_MONGODB_USERNAME: ${{ secrets.AUTH_MONGODB_USERNAME }}
           AUTH_MONGODB_PASSWORD: ${{ secrets.AUTH_MONGODB_PASSWORD }}
           AUTH_MONGODB_PORT: ${{ secrets.AUTH_MONGODB_PASSWORD }}
+      - name: install sqlx-cli
+        run: cargo install sqlx-cli --no-default-features --features native-tls,postgres
+      - name: run sqlx migrations
+        run: cd database && sqlx migrate run --database-url "${{ secrets.TEST_CORE_DATABASE_URL }}"
       - name: cargo generate-lockfile
         if: hashFiles('Cargo.lock') == ''
         run: cargo generate-lockfile
