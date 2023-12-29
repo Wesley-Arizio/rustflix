@@ -103,8 +103,58 @@ impl EntityRepository<Postgres, UserDAO, UserDAO, UpdateUserDAO, UserBy, UsersWh
 #[cfg(feature = "integration")]
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn test_db() {
-        assert_eq!(1+1, 2);
+    use crate::connection::PgPool;
+    use crate::entities::users::{UpdateUserDAO, UserBy, UserDAO, UserRepository};
+    use crate::traits::EntityRepository;
+    use sqlx::types::{uuid::Uuid, chrono::Utc};
+
+    #[tokio::test]
+    async fn test_db() {
+        let pool = PgPool::connect("postgres://root:123456@localhost:5432/rustflix")
+            .await
+            .unwrap();
+
+        // create user
+        let response = UserRepository::insert(
+            &pool,
+            UserDAO {
+                id: Uuid::new_v4(),
+                name: "akira".to_string(),
+                birthday: Utc::now(),
+                active: true,
+            },
+        )
+        .await
+        .expect("Could not create user");
+
+        // get user
+        let found = UserRepository::get(&pool, UserBy::Id(response.id)).await.expect("User not found");
+
+        assert_eq!(response.id, found.id);
+        assert_eq!(response.name, found.name);
+        assert_eq!(response.birthday, found.birthday);
+        assert!(response.active);
+
+        // try_get user, returns none if user isn't found
+        let found = UserRepository::try_get(&pool, UserBy::Id(response.id)).await.unwrap().unwrap();
+
+        assert_eq!(response.id, found.id);
+        assert_eq!(response.name, found.name);
+        assert_eq!(response.birthday, found.birthday);
+        assert!(found.active);
+
+        // update
+        let updated = UserRepository::update(&pool, UserBy::Id(response.id), UpdateUserDAO {
+            name: "Masashi".to_string()
+        }).await.expect("Could not update user");
+
+        assert_eq!(response.id, updated.id);
+        assert_eq!(updated.name, "Masashi");
+        assert!(updated.active);
+
+        // delete
+        let deleted = UserRepository::delete(&pool, UserBy::Id(response.id)).await.expect("Could not delete an user");
+        assert_eq!(response.id, deleted.id);
+        assert!(!deleted.active);
     }
 }

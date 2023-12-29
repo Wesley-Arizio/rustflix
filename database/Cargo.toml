@@ -10,8 +10,16 @@ edition = "2021"
 sqlx = { version = "0.7.3", features = ["runtime-tokio", "uuid", "postgres", "chrono"] }
 async-trait = "0.1.74"
 
+[dependencies.uuid]
+version = "1.6.1"
+features = ["v4"]
+
 [features]
-integration = []
+# enables tokio/macros for running integration tests
+integration = ["tokio/macros"]
+
+[dev-dependencies]
+tokio = { version = "1.35.1", default-features = false, features = ["macros"] }
 
 [lib]
 doctest = false
