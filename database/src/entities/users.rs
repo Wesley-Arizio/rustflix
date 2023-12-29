@@ -99,3 +99,12 @@ impl EntityRepository<Postgres, UserDAO, UserDAO, UpdateUserDAO, UserBy, UsersWh
         }
     }
 }
+
+#[cfg(feature = "integration")]
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_db() {
+        assert_eq!(1+1, 2);
+    }
+}

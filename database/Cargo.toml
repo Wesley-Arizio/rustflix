@@ -3,8 +3,15 @@ name = "database"
 version = "0.1.0"
 edition = "2021"
 
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 sqlx = { version = "0.7.3", features = ["runtime-tokio", "uuid", "postgres", "chrono"] }
 async-trait = "0.1.74"
+
+[features]
+integration = []
+
+[lib]
+doctest = false
