@@ -63,6 +63,9 @@ jobs:
           POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          AUTH_MONGODB_USERNAME: ${{ secrets.AUTH_MONGODB_USERNAME }}
+          AUTH_MONGODB_PASSWORD: ${{ secrets.AUTH_MONGODB_PASSWORD }}
+          AUTH_MONGODB_PORT: ${{ secrets.AUTH_MONGODB_PASSWORD }}
       - name: cargo test
         if: hashFiles('Cargo.lock') != ''
         run: cargo test --locked --all-features --all-targets
