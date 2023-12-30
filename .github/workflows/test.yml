@@ -43,7 +43,7 @@ jobs:
 
       - name: Install docker for macos runner
         if: runner.os == 'Macos'
-        run: brew install docker docker-compose && open -a Docker
+        run: brew install --cask docker && open /Applications/Docker.app
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v2
@@ -56,7 +56,7 @@ jobs:
         if: hashFiles('Cargo.lock') == ''
         run: cargo generate-lockfile
       - name: setup postgres database
-        run: docker-compose up -d
+        run: docker compose up
         env:
           POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
