@@ -20,6 +20,8 @@ jobs:
     name: ubuntu / nightly
     env:
       TEST_CORE_DATABASE_URL: ${{ secrets.TEST_CORE_DATABASE_URL }}
+      TEST_AUTH_DATABASE_URI: ${{ secrets.TEST_AUTH_DATABASE_URI }}
+      TEST_AUTH_DATABASE_NAME: ${{ secrets.TEST_AUTH_DATABASE_NAME }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,7 +31,7 @@ jobs:
       - name: Install Protoc
         uses: arduino/setup-protoc@v2
       - name: setup postgres database
-        run: docker-compose up -d postgres
+        run: docker-compose up -d
         env:
           POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
@@ -59,6 +61,8 @@ jobs:
     name: ubuntu / beta / updated
     env:
       TEST_CORE_DATABASE_URL: ${{ secrets.TEST_CORE_DATABASE_URL }}
+      TEST_AUTH_DATABASE_URI: ${{ secrets.TEST_AUTH_DATABASE_URI }}
+      TEST_AUTH_DATABASE_NAME: ${{ secrets.TEST_AUTH_DATABASE_NAME }}
     # There's no point running this if no Cargo.lock was checked in in the first place, since we'd
     # just redo what happened in the regular test job. Unfortunately, hashFiles only works in if on
     # steps, so we repeat it.
@@ -75,7 +79,7 @@ jobs:
         if: hashFiles('Cargo.lock') != ''
         run: cargo update
       - name: setup postgres database
-        run: docker-compose up -d postgres
+        run: docker-compose up -d
         env:
           POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
