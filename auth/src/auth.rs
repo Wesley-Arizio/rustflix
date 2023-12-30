@@ -80,6 +80,7 @@ where
     }
 }
 
+#[cfg(not(feature = "integration"))]
 #[cfg(test)]
 mod tests {
     use super::*;

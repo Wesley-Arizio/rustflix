@@ -13,6 +13,7 @@ mod password_helper;
 use database::account_repository::AccountRepository;
 
 use crate::auth::AuthService;
+use crate::database::database_setup;
 use mongodb::{options::ClientOptions, Client};
 
 #[derive(Parser, Debug)]
@@ -38,15 +39,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .parse()
         .expect("Could not parse socket address with given grpc port");
 
-    let client_options = ClientOptions::parse(&args.mongodb_url)
-        .await
-        .expect("error parsing client options");
+    let db = database_setup(&args.mongodb_url, &args.database_name).await;
 
-    let client = Client::with_options(client_options).expect("error initializing mongodb client");
-    let collection = client
-        .database(&args.database_name)
-        .collection("credentials");
-    let account_repository = AccountRepository::new(collection);
+    let account_repository = AccountRepository::new(db.collection("credentials"));
     let auth_service = AuthService::new(account_repository);
     let auth_service = GRPCAuthService::new(auth_service);
 
