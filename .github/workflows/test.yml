@@ -17,61 +17,6 @@ concurrency:
   cancel-in-progress: true
 name: test
 jobs:
-  os-check:
-    # run cargo test on mac and windows
-    runs-on: ${{ matrix.os }}
-    name: ${{ matrix.os }} / stable
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-latest, windows-latest]
-    env:
-      TEST_CORE_DATABASE_URL: ${{ secrets.TEST_CORE_DATABASE_URL }}
-      TEST_AUTH_DATABASE_URI: ${{ secrets.TEST_AUTH_DATABASE_URI }}
-      TEST_AUTH_DATABASE_NAME: ${{ secrets.TEST_AUTH_DATABASE_NAME }}
-    steps:
-      # if your project needs OpenSSL, uncomment this to fix Windows builds.
-      # it's commented out by default as the install command takes 5-10m.
-      # - run: echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
-      #   if: runner.os == 'Windows'
-      # - run: vcpkg install openssl:x64-windows-static-md
-      #   if: runner.os == 'Windows'
-
-      - name: Install docker for windows runner
-        if: runner.os == 'Windows'
-        run:  choco install docker && choco install docker-compose
-
-      - name: Install docker for macos runner
-        if: runner.os == 'Macos'
-        run: brew install --cask docker && open /Applications/Docker.app
-
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v2
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-      - name: Install stable
-        uses: dtolnay/rust-toolchain@stable
-      - name: cargo generate-lockfile
-        if: hashFiles('Cargo.lock') == ''
-        run: cargo generate-lockfile
-      - name: setup postgres database
-        run: docker compose up
-        env:
-          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-          AUTH_MONGODB_USERNAME: ${{ secrets.AUTH_MONGODB_USERNAME }}
-          AUTH_MONGODB_PASSWORD: ${{ secrets.AUTH_MONGODB_PASSWORD }}
-          AUTH_MONGODB_PORT: ${{ secrets.AUTH_MONGODB_PASSWORD }}
-      - name: install sqlx-cli
-        run: cargo install sqlx-cli --no-default-features --features native-tls,postgres
-      - name: run sqlx migrations
-        run: cd database && sqlx migrate run --database-url "${{ secrets.TEST_CORE_DATABASE_URL }}"
-      - name: cargo test
-        run: cargo test --locked --all-features --all-targets
   coverage:
     # use llvm-cov to build and collect coverage and outputs in a format that is compatible with
     # codecov.io
