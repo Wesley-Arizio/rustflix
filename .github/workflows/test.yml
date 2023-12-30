@@ -42,7 +42,7 @@ jobs:
         run:  choco install docker && choco install docker-compose
 
       - name: Install docker for macos runner
-        if: runner.os = 'Macos'
+        if: runner.os == 'Macos'
         run: brew install docker docker-compose
 
       - name: Install Protoc
