@@ -14,3 +14,23 @@ pub async fn database_setup(uri: &str, database_name: &str) -> mongodb::Database
 
     client.database(database_name)
 }
+
+#[cfg(feature = "integration")]
+#[cfg(test)]
+mod tests {
+    use crate::database::database_setup;
+    use dotenv;
+
+    #[tokio::test]
+    async fn test_db_connection() {
+        dotenv::dotenv().ok();
+        let uri =
+            std::env::var("TEST_AUTH_DATABASE_URI").expect("TEST_AUTH_DATABASE_URI must be set");
+        let db_name =
+            std::env::var("TEST_AUTH_DATABASE_NAME").expect("TEST_AUTH_DATABASE_NAME must be set");
+
+        let db = database_setup(&uri, &db_name).await;
+
+        assert_eq!(db.name(), db_name);
+    }
+}
