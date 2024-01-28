@@ -31,10 +31,10 @@ struct Args {
     /// Port that the API will run at
     #[arg(env = "GRAPHQL_API_PORT")]
     api_port: u16,
-
+    /// Database URL to connect with core databse
     #[arg(env = "GRAPHQL_DATABASE_URL")]
     database_url: String,
-
+    /// Auth microservice grpc port
     #[arg(env = "GRAPHQL_AUTH_GRPC_PORT")]
     auth_grpc_port: String,
 }
