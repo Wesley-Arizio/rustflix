@@ -15,6 +15,7 @@ coverage:
 ignore:
   - "tests"
   - "grpc-interfaces"
+  - "scripts"
 
 # Make comments less noisy
 comment:
