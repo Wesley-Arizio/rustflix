@@ -21,3 +21,20 @@ services:
       - POSTGRES_DB=$POSTGRES_DB
     ports:
       - 5432:5432
+
+  auth:
+    image: movies-api-auth
+    depends_on:
+      - auth_mongo
+    restart: always
+    ports:
+      - 50051:50051
+
+  graphql-core:
+    image: movies-api-graphql-core
+    depends_on:
+      - postgres
+      - auth
+    restart: always
+    ports:
+      - 8080:8080
