@@ -387,7 +387,7 @@ dependencies = [
  "clap",
  "dotenv",
  "futures",
- "grpc-interfaces",
+ "grpc-interfaces 0.1.0 (git+https://github.com/Wesley-Arizio/rustflix.git?branch=main)",
  "mockall",
  "mongodb",
  "prost",
@@ -731,7 +731,7 @@ name = "core"
 version = "0.1.0"
 dependencies = [
  "database",
- "grpc-interfaces",
+ "grpc-interfaces 0.1.0",
  "tokio",
  "tonic",
 ]
@@ -1229,7 +1229,7 @@ dependencies = [
  "core",
  "database",
  "dotenv",
- "grpc-interfaces",
+ "grpc-interfaces 0.1.0",
  "juniper",
  "tokio",
  "tonic",
@@ -1248,6 +1248,16 @@ dependencies = [
 [[package]]
 name = "grpc-interfaces"
 version = "0.1.0"
+dependencies = [
+ "prost",
+ "tonic",
+ "tonic-build",
+]
+
+[[package]]
+name = "grpc-interfaces"
+version = "0.1.0"
+source = "git+https://github.com/Wesley-Arizio/rustflix.git?branch=main#f3d4e8a1a005e9dba4c60ac88b25683d858a0639"
 dependencies = [
  "prost",
  "tonic",
