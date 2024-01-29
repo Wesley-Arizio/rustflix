@@ -18,6 +18,10 @@ jobs:
       - name: Run unit tests
         run: cargo t
   integration:
+    env:
+      TEST_CORE_DATABASE_URL: ${{ secrets.TEST_CORE_DATABASE_URL }}
+      TEST_AUTH_DATABASE_URI: ${{ secrets.TEST_AUTH_DATABASE_URI }}
+      TEST_AUTH_DATABASE_NAME: ${{ secrets.TEST_AUTH_DATABASE_NAME }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
