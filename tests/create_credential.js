@@ -9,8 +9,9 @@ export const options = {
     },
 };
 export default function() {
+    const URL = __ENV.GRAPHQL_CORE_URL;
     const user = {
-        email: "test@gmail.com",
+        email: "test2@gmail.com",
         name: "test",
         password: "1234566",
         birthday: "2023-12-29T14:57:11.873961Z"
@@ -30,7 +31,7 @@ export default function() {
     };
     const response = http
         .post(
-            "http://localhost:8080/graphql",
+            URL,
             JSON.stringify({ query }),
             { headers }
         );
@@ -48,7 +49,7 @@ export default function() {
     // Duplicated account
     const duplicated_account = http
         .post(
-            "http://localhost:8080/graphql",
+            URL,
             JSON.stringify({ query }),
             { headers }
         );
@@ -74,7 +75,7 @@ export default function() {
     `;
     const invalid_email = http
         .post(
-            "http://localhost:8080/graphql",
+            URL,
             JSON.stringify({ query: query2 }),
             { headers }
         );
