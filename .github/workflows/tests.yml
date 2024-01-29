@@ -44,3 +44,25 @@ jobs:
         run: cd database && sqlx migrate run --database-url "${{ secrets.TEST_CORE_DATABASE_URL }}"
       - name: Run integration tests
         run: cargo t --features="integration"
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v2
+      - name: Create .env file
+        run: cp .env.example .env
+      - name: Build auth microservice image
+        run: docker build -f auth.dockerfile -t rustflix-auth .
+      - name: Build graphql-core microservice image
+        run: docker build -f graphql-core.dockerfile -t rustflix-graphql-core .
+      - name: setup services
+        run: docker compose up -d
+      - name: install sqlx-cli
+        run: cargo install sqlx-cli --no-default-features --features native-tls,postgres
+      - name: run sqlx migrations
+        run: cd database && sqlx migrate run --database-url "${{ secrets.TEST_CORE_DATABASE_URL }}"
+      - name: run e2e tests
+        uses: grafana/k6-action@v0.2.0
+        with:
+          filename: tests/create_credential.js

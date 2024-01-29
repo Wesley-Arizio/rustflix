@@ -23,7 +23,7 @@ services:
       - 5432:5432
 
   auth:
-    image: movies-api-auth
+    image: rustflix-auth
     depends_on:
       - auth_mongo
     restart: always
@@ -31,7 +31,7 @@ services:
       - 50051:50051
 
   graphql-core:
-    image: movies-api-graphql-core
+    image: rustflix-graphql-core
     depends_on:
       - postgres
       - auth
