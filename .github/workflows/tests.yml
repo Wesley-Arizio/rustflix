@@ -12,7 +12,7 @@ jobs:
   unit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install Protoc
         uses: arduino/setup-protoc@v2
       - name: Run unit tests
@@ -24,7 +24,7 @@ jobs:
       TEST_AUTH_DATABASE_NAME: ${{ secrets.TEST_AUTH_DATABASE_NAME }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install Protoc
         uses: arduino/setup-protoc@v2
       - name: setup postgres database
@@ -47,7 +47,7 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install Protoc
         uses: arduino/setup-protoc@v2
       - name: Create .env file
