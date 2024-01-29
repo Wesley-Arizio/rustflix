@@ -21,5 +21,5 @@ RUN apt-get update && \
     apt-get install -y protobuf-compiler
 COPY .env ./.env
 COPY --from=builder /app/target/release/graphql-core /app/graphql-core
-EXPOSE 50051
+EXPOSE 8080
 CMD ["/app/graphql-core"]
