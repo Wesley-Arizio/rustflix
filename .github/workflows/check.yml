@@ -53,7 +53,7 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           components: clippy
       - name: Install Protoc
-        uses: arduino/setup-protoc@v2
+        uses: arduino/setup-protoc@v3
       - name: cargo clippy
         uses: actions-rs/clippy-check@v1
         with:
@@ -71,7 +71,7 @@ jobs:
       - name: Install nightly
         uses: dtolnay/rust-toolchain@nightly
       - name: Install Protoc
-        uses: arduino/setup-protoc@v2
+        uses: arduino/setup-protoc@v3
       - name: cargo doc
         run: cargo doc --no-deps --all-features
         env:
