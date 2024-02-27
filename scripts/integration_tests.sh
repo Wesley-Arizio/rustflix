@@ -29,7 +29,7 @@ if [ $? -eq 0 ]; then
     cd ../database/ && sqlx migrate run --database-url $SCRIPTS_CORE_DATABASE_URL
 
     # run e2e tests
-    cd ../tests/ && k6 run ./create_credential.js
+    cd ../tests/ && k6 run ./create_credential.js -e GRAPHQL_CORE_URL=$GRAPHQL_CORE_URL
 else
     echo "Failed to start the container."
 fi
