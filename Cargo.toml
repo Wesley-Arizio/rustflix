@@ -1,5 +1,5 @@
 [workspace]
-
+resolver = "1"
 
 
 members = [
@@ -8,5 +8,6 @@ members = [
   "graphql-core",
   "database",
   "core",
-  "core-database"
+  "core-database",
+  "auth-database"
 ]

@@ -400,6 +400,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "auth-database"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "database 0.1.0",
+ "dotenv",
+ "sqlx",
+ "tokio",
+ "uuid 1.6.1",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

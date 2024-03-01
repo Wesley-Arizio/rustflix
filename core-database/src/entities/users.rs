@@ -1,13 +1,7 @@
 use crate::{
+    connection::{Pool, Postgres},
     traits::{DatabaseError, EntityRepository},
-    types::{
-        DateTime,
-        Utc,
-        Uuid,
-    },
-    connection::{
-        Pool, Postgres,
-    }
+    types::{DateTime, Utc, Uuid},
 };
 
 #[derive(sqlx::FromRow, Debug, PartialEq, Eq, Clone)]

@@ -1,6 +1,6 @@
 use core_database::{
     entities::users::UserDAO,
-    types::{DateTime, Utc, Uuid}
+    types::{DateTime, Utc, Uuid},
 };
 
 #[derive(Debug)]
