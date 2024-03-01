@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-database = { path = "../database" }
+core-database = { path = "../core-database" }
 grpc-interfaces = { path = "../grpc-interfaces" }
 tonic = "0.10.2"
 tokio =  {version = "1.35.0", features = ["sync"]}

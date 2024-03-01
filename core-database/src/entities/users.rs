@@ -1,12 +1,14 @@
-use sqlx::{
+use crate::{
+    traits::{DatabaseError, EntityRepository},
     types::{
-        chrono::{DateTime, Utc},
+        DateTime,
+        Utc,
         Uuid,
     },
-    Pool, Postgres,
+    connection::{
+        Pool, Postgres,
+    }
 };
-
-use crate::traits::{DatabaseError, EntityRepository};
 
 #[derive(sqlx::FromRow, Debug, PartialEq, Eq, Clone)]
 pub struct UserDAO {

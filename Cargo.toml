@@ -1,9 +1,12 @@
 [workspace]
 
+
+
 members = [
   "auth",
   "grpc-interfaces",
   "graphql-core",
   "database",
-  "core"
+  "core",
+  "core-database"
 ]

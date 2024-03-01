@@ -1,0 +1,27 @@
+[package]
+name = "core-database"
+version = "0.1.0"
+edition = "2021"
+
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+database = { path = "../database" }
+sqlx = { version = "0.7.3", features = ["runtime-tokio", "uuid", "postgres", "chrono"] }
+async-trait = "0.1.74"
+
+[dependencies.uuid]
+version = "1.6.1"
+features = ["v4"]
+
+[features]
+# enables tokio/macros for running integration tests
+integration = ["tokio/macros"]
+
+[dev-dependencies]
+tokio = { version = "1.35.1", default-features = false, features = ["macros"] }
+dotenv = "0.15.0"
+
+[lib]
+doctest = false

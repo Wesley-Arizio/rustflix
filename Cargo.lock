@@ -387,7 +387,7 @@ dependencies = [
  "clap",
  "dotenv",
  "futures",
- "grpc-interfaces 0.1.0 (git+https://github.com/Wesley-Arizio/rustflix.git?branch=main)",
+ "grpc-interfaces",
  "mockall",
  "mongodb",
  "prost",
@@ -730,21 +730,22 @@ dependencies = [
 name = "core"
 version = "0.1.0"
 dependencies = [
- "database 0.1.0",
- "grpc-interfaces 0.1.0",
+ "core-database",
+ "grpc-interfaces",
  "tokio",
  "tonic",
 ]
 
 [[package]]
-name = "core"
+name = "core-database"
 version = "0.1.0"
-source = "git+https://github.com/Wesley-Arizio/rustflix.git?branch=main#f3d4e8a1a005e9dba4c60ac88b25683d858a0639"
 dependencies = [
- "database 0.1.0 (git+https://github.com/Wesley-Arizio/rustflix.git?branch=main)",
- "grpc-interfaces 0.1.0 (git+https://github.com/Wesley-Arizio/rustflix.git?branch=main)",
+ "async-trait",
+ "database 0.1.0",
+ "dotenv",
+ "sqlx",
  "tokio",
- "tonic",
+ "uuid 1.6.1",
 ]
 
 [[package]]
@@ -1247,10 +1248,10 @@ dependencies = [
  "actix-web",
  "chrono",
  "clap",
- "core 0.1.0 (git+https://github.com/Wesley-Arizio/rustflix.git?branch=main)",
+ "core",
  "database 0.1.0 (git+https://github.com/Wesley-Arizio/rustflix.git?branch=main)",
  "dotenv",
- "grpc-interfaces 0.1.0 (git+https://github.com/Wesley-Arizio/rustflix.git?branch=main)",
+ "grpc-interfaces",
  "juniper",
  "tokio",
  "tonic",
@@ -1269,16 +1270,6 @@ dependencies = [
 [[package]]
 name = "grpc-interfaces"
 version = "0.1.0"
-dependencies = [
- "prost",
- "tonic",
- "tonic-build",
-]
-
-[[package]]
-name = "grpc-interfaces"
-version = "0.1.0"
-source = "git+https://github.com/Wesley-Arizio/rustflix.git?branch=main#f3d4e8a1a005e9dba4c60ac88b25683d858a0639"
 dependencies = [
  "prost",
  "tonic",

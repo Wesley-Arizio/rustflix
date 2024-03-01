@@ -1,11 +1,9 @@
 use crate::dto::user::UserDTO;
-use database::traits::DatabaseError;
-use database::types::DateTime;
-use database::{
+use core_database::{
     connection::{Pool, Postgres},
+    traits::{DatabaseError, EntityRepository},
+    types::{Utc, Uuid, DateTime},
     entities::users::{UserDAO, UserRepository},
-    traits::EntityRepository,
-    types::{Utc, Uuid},
 };
 use grpc_interfaces::auth::{auth_client::AuthClient, CreateCredentialsRequest, SignInRequest};
 use std::error::Error;

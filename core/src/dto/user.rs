@@ -1,5 +1,7 @@
-use database::entities::users::UserDAO;
-use database::types::{DateTime, Utc, Uuid};
+use core_database::{
+    entities::users::UserDAO,
+    types::{DateTime, Utc, Uuid}
+};
 
 #[derive(Debug)]
 pub struct UserDTO {
