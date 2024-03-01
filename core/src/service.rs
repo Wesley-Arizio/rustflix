@@ -120,3 +120,5 @@ impl Core {
         Ok(user.into())
     }
 }
+
+// TODO - Implement unit or integration tests

@@ -158,12 +158,10 @@ impl
 mod tests {
     use crate::connection::PgPool;
     use crate::entities::credentials::{
-        CreateCredentialsDAO, CredentialsBy, CredentialsDAO, CredentialsRepository,
-        UpdateCredentialsDAO,
+        CreateCredentialsDAO, CredentialsBy, CredentialsRepository, UpdateCredentialsDAO,
     };
     use crate::traits::EntityRepository;
     use dotenv;
-    use sqlx::types::uuid::Uuid;
 
     #[tokio::test]
     async fn test_db() {

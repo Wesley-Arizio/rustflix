@@ -133,16 +133,11 @@ impl
 #[cfg(test)]
 mod tests {
     use crate::connection::PgPool;
-    use crate::entities::credentials::{
-        CredentialsBy, CredentialsDAO, CredentialsRepository, UpdateCredentialsDAO,
-    };
-    use crate::entities::sessions::{
-        CreateSessionsDAO, SessionsBy, SessionsDAO, SessionsRepository,
-    };
+    use crate::entities::credentials::{CreateCredentialsDAO, CredentialsRepository};
+    use crate::entities::sessions::{CreateSessionsDAO, SessionsBy, SessionsRepository};
     use crate::traits::EntityRepository;
     use database::types::Utc;
     use dotenv;
-    use sqlx::types::uuid::Uuid;
     use std::time::Duration;
 
     #[tokio::test]
@@ -155,11 +150,9 @@ mod tests {
         // create credential
         let response = CredentialsRepository::insert(
             &pool,
-            CredentialsDAO {
-                id: Uuid::new_v4(),
+            CreateCredentialsDAO {
                 email: "akira".to_string(),
                 password: String::from("password"),
-                active: true,
             },
         )
         .await
