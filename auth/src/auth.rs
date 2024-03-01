@@ -3,6 +3,7 @@ use std::error::Error;
 
 use super::database::traits::{Repository, RepositoryError};
 use crate::password_helper::{PasswordHelper, PasswordHelperError};
+use mongodb::bson::uuid::Uuid;
 use regex::Regex;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -28,6 +29,19 @@ impl From<PasswordHelperError> for AuthServiceError {
     }
 }
 
+fn valid_email(email: &str) -> Result<(), AuthServiceError> {
+    let regex = Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+        .map_err(|_| AuthServiceError::InternalServerError)?;
+
+    if !regex.is_match(email) {
+        return Err(AuthServiceError::InvalidInput {
+            message: "invalid email".to_string(),
+        });
+    }
+
+    Ok(())
+}
+
 #[derive(Debug)]
 pub struct AuthService<R>
 where
@@ -46,23 +60,32 @@ where
         }
     }
 
+    pub async fn sign_in(&self, email: &str, password: &str) -> Result<String, AuthServiceError> {
+        valid_email(email)?;
+
+        println!("password: {:?}", password);
+
+        if let Some(account) = self.account_repository.try_get(email).await? {
+            if !PasswordHelper::verify(&account.password, password)? {
+                return Err(AuthServiceError::InvalidCredentials);
+            };
+
+            let session_id = Uuid::new().to_string();
+            // TODO - refactor NoSQL db to SQL to create relation between credential and session.
+            // TODO - Save session id into database with timestamp
+
+            Ok(String::from(session_id))
+        } else {
+            return Err(AuthServiceError::InvalidCredentials);
+        }
+    }
+
     pub async fn create_account(
         &self,
         email: &str,
         password: &str,
     ) -> Result<String, AuthServiceError> {
-        let regex =
-            Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").map_err(|e| {
-                eprintln!("regex pattern error: {:?}", e);
-                AuthServiceError::InternalServerError
-            })?;
-
-        if !regex.is_match(email) {
-            return Err(AuthServiceError::InvalidInput {
-                message: "invalid email".to_string(),
-            });
-        };
-
+        valid_email(email)?;
         let exists = self.account_repository.exists(email).await?;
 
         if exists {

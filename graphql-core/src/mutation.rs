@@ -24,4 +24,14 @@ impl MutationRoot {
 
         Ok(response.into())
     }
+
+    async fn sign_in(&self, email: String, password: String) -> FieldResult<String> {
+        let response = self
+            .core
+            .sign_in(email, password)
+            .await
+            .map_err(|e| FieldError::new(e, juniper::Value::null()))?;
+
+        Ok(response.into())
+    }
 }

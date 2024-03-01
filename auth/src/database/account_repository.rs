@@ -3,6 +3,7 @@ use super::{
     traits::{Repository, RepositoryError},
 };
 
+// use mongodb::options::FindOptions;
 use mongodb::{bson::doc, Collection};
 
 use tonic::async_trait;
@@ -45,6 +46,16 @@ impl Repository for AccountRepository {
             0 => Ok(false),
             _ => Ok(true),
         }
+    }
+
+    async fn try_get(&self, identifier: &str) -> Result<Option<Account>, RepositoryError> {
+        Ok(self
+            .collection
+            .find_one(
+                doc! { "email": identifier },
+                None, // Some(FindOptions { limit: Some(1i64) }),
+            )
+            .await?)
     }
 }
 

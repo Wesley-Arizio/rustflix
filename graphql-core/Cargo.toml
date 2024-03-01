@@ -11,8 +11,8 @@ actix-web = "4.4.0"
 clap =  { version = "4.4.10", features = ["derive", "env"] }
 database = { git = "https://github.com/Wesley-Arizio/rustflix.git", branch = "main" }
 dotenv = "0.15.0"
-grpc-interfaces = { git = "https://github.com/Wesley-Arizio/rustflix.git", branch = "main" }
-core = { git = "https://github.com/Wesley-Arizio/rustflix.git", branch = "main" }
+grpc-interfaces = { path = "../grpc-interfaces" }
+core = { path = "../core" }
 tonic = "0.10.2"
 tokio =  { version = "1.35.0", features = ["sync"]}
 chrono = "0.4.31"

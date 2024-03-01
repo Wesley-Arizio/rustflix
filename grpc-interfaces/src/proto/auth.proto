@@ -3,6 +3,16 @@ package auth;
 
 service Auth {
   rpc CreateCredential (CreateCredentialsRequest) returns (CreateCredentialsResponse);
+  rpc SignIn(SignInRequest) returns (SignInResponse);
+}
+
+message SignInRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message SignInResponse {
+  string session_id = 1;
 }
 
 message CreateCredentialsRequest {

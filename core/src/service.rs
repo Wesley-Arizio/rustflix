@@ -7,8 +7,7 @@ use database::{
     traits::EntityRepository,
     types::{Utc, Uuid},
 };
-use grpc_interfaces::auth::auth_client::AuthClient;
-use grpc_interfaces::auth::CreateCredentialsRequest;
+use grpc_interfaces::auth::{auth_client::AuthClient, CreateCredentialsRequest, SignInRequest};
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
@@ -80,6 +79,17 @@ impl Core {
 }
 
 impl Core {
+    pub async fn sign_in(&self, email: String, password: String) -> Result<String, CoreError> {
+        let mut auth_client = self.auth_client.lock().await;
+        let request = SignInRequest { email, password };
+
+        let response = auth_client
+            .sign_in(Request::new(request))
+            .await
+            .map(|r| r.into_inner())
+            .map_err(CoreError::from)?;
+        Ok(response.session_id)
+    }
     pub async fn create_account(
         &self,
         email: String,

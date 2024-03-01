@@ -2,7 +2,8 @@ use crate::auth::{AuthService, AuthServiceError};
 use crate::database::entities::account::{Account, CreateAccountDAO};
 use crate::database::traits::Repository;
 use grpc_interfaces::auth::{
-    auth_server::Auth, CreateCredentialsRequest, CreateCredentialsResponse,
+    auth_server::Auth, CreateCredentialsRequest, CreateCredentialsResponse, SignInRequest,
+    SignInResponse,
 };
 use tonic::{Request, Response, Status};
 
@@ -54,6 +55,22 @@ where
             .await
             .map_err(Status::from)?;
         let response = CreateCredentialsResponse { user_id: id };
+        Ok(Response::new(response))
+    }
+
+    async fn sign_in(
+        &self,
+        request: Request<SignInRequest>,
+    ) -> Result<Response<SignInResponse>, Status> {
+        let input = request.into_inner();
+        let session_id = self
+            .service
+            .sign_in(&input.email, &input.password)
+            .await
+            .map_err(Status::from)?;
+
+        let response = SignInResponse { session_id };
+
         Ok(Response::new(response))
     }
 }

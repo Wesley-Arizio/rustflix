@@ -16,6 +16,8 @@ pub trait Repository {
     async fn create(&self, entity: &Self::CreateEntityDAO)
         -> Result<Self::Entity, RepositoryError>;
     async fn exists(&self, identifier: &str) -> Result<bool, RepositoryError>;
+
+    async fn try_get(&self, identifier: &str) -> Result<Option<Self::Entity>, RepositoryError>;
 }
 
 #[cfg(not(feature = "integration"))]
@@ -33,5 +35,6 @@ mock! {
         type CreateEntityDAO = crate::database::entities::account::CreateAccountDAO;
         async fn create(&self, entity: &<crate::database::traits::MockFakeRepository as Repository>::CreateEntityDAO )-> Result<<crate::database::traits::MockFakeRepository as Repository>::Entity, RepositoryError>;
         async fn exists(&self, identifier: &str) -> Result<bool, RepositoryError>;
+        async fn try_get(&self, identifier: &str) -> Result<Option<<crate::database::traits::MockFakeRepository as Repository>::Entity>, RepositoryError>;
     }
 }
