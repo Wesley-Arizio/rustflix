@@ -1,15 +1,6 @@
 version: "3.9"
 
 services:
-  auth_mongo:
-    image: mongo
-    restart: always
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=$AUTH_MONGODB_USERNAME
-      - MONGO_INITDB_ROOT_PASSWORD=$AUTH_MONGODB_PASSWORD
-    ports:
-      - 27017:27017
-
   postgres:
     image: postgres:15
     restart: always
@@ -37,7 +28,7 @@ services:
   auth:
     image: rustflix-auth
     depends_on:
-      - auth_mongo
+      - auth_postgres
     restart: always
     ports:
       - 50051:50051

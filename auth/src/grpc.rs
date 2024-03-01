@@ -1,6 +1,4 @@
 use crate::auth::{AuthService, AuthServiceError};
-use crate::database::entities::account::{Account, CreateAccountDAO};
-use crate::database::traits::Repository;
 use grpc_interfaces::auth::{
     auth_server::Auth, CreateCredentialsRequest, CreateCredentialsResponse, SignInRequest,
     SignInResponse,
@@ -18,20 +16,12 @@ impl From<AuthServiceError> for Status {
 }
 
 #[derive(Debug)]
-pub struct GRPCAuthService<R>
-where
-    R: 'static,
-    R: Repository<Entity = Account, CreateEntityDAO = CreateAccountDAO> + Send + Sync,
-{
-    service: AuthService<R>,
+pub struct GRPCAuthService {
+    service: AuthService,
 }
 
-impl<R> GRPCAuthService<R>
-where
-    R: 'static,
-    R: Repository<Entity = Account, CreateEntityDAO = CreateAccountDAO> + Send + Sync,
-{
-    pub fn new(auth_service: AuthService<R>) -> Self {
+impl GRPCAuthService {
+    pub fn new(auth_service: AuthService) -> Self {
         Self {
             service: auth_service,
         }
@@ -39,11 +29,7 @@ where
 }
 
 #[tonic::async_trait]
-impl<R> Auth for GRPCAuthService<R>
-where
-    R: 'static,
-    R: Repository<Entity = Account, CreateEntityDAO = CreateAccountDAO> + Send + Sync,
-{
+impl Auth for GRPCAuthService {
     async fn create_credential(
         &self,
         request: Request<CreateCredentialsRequest>,

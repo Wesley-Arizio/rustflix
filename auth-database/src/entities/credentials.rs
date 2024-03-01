@@ -13,6 +13,12 @@ pub struct CredentialsDAO {
 }
 
 #[derive(sqlx::FromRow, Debug, PartialEq, Eq, Clone)]
+pub struct CreateCredentialsDAO {
+    pub email: String,
+    pub password: String,
+}
+
+#[derive(sqlx::FromRow, Debug, PartialEq, Eq, Clone)]
 pub struct UpdateCredentialsDAO {
     pub password: String,
     pub active: bool,
@@ -37,7 +43,7 @@ impl
     EntityRepository<
         Postgres,
         CredentialsDAO,
-        CredentialsDAO,
+        CreateCredentialsDAO,
         UpdateCredentialsDAO,
         CredentialsBy,
         CredentialsWhere,
@@ -45,7 +51,7 @@ impl
 {
     async fn insert(
         db: &Pool<Postgres>,
-        input: CredentialsDAO,
+        input: CreateCredentialsDAO,
     ) -> Result<CredentialsDAO, DatabaseError> {
         sqlx::query_as::<_, CredentialsDAO>("INSERT INTO credentials (email, password) VALUES ($1, $2) RETURNING id, email, password, active;")
             .bind(input.email)
@@ -152,7 +158,8 @@ impl
 mod tests {
     use crate::connection::PgPool;
     use crate::entities::credentials::{
-        CredentialsBy, CredentialsDAO, CredentialsRepository, UpdateCredentialsDAO,
+        CreateCredentialsDAO, CredentialsBy, CredentialsDAO, CredentialsRepository,
+        UpdateCredentialsDAO,
     };
     use crate::traits::EntityRepository;
     use dotenv;
@@ -168,11 +175,9 @@ mod tests {
         // create credential
         let response = CredentialsRepository::insert(
             &pool,
-            CredentialsDAO {
-                id: Uuid::new_v4(),
+            CreateCredentialsDAO {
                 email: "akira".to_string(),
                 password: String::from("password"),
-                active: true,
             },
         )
         .await

@@ -20,6 +20,7 @@ mockall = "0.12.0"
 regex = "1.10.2"
 argon2 = "0.5.2"
 rand_core = "0.6.4"
+auth-database = { path = "../auth-database" }
 
 [dependencies.mongodb]
 version = "2.7.1"

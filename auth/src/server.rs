@@ -1,22 +1,18 @@
 use crate::auth::AuthService;
-use crate::database::account_repository::AccountRepository;
-use crate::database::database_setup;
 use crate::grpc::GRPCAuthService;
+use auth_database::connection::PgPool;
 use grpc_interfaces::auth::auth_server::AuthServer;
 use std::error::Error;
 use tonic::transport::Server;
 
-pub async fn run_server(
-    server_address: &str,
-    mongodb_url: &str,
-    database_name: &str,
-) -> Result<(), Box<dyn Error>> {
+pub async fn run_server(server_address: &str, database_url: &str) -> Result<(), Box<dyn Error>> {
     let address = server_address.parse()?;
 
-    let db = database_setup(mongodb_url, database_name).await;
+    let pool = PgPool::connect(&database_url)
+        .await
+        .expect("Could not connect to database");
 
-    let account_repository = AccountRepository::new(db.collection("credentials"));
-    let auth_service = AuthService::new(account_repository);
+    let auth_service = AuthService::new(pool);
     let auth_service = GRPCAuthService::new(auth_service);
 
     Server::builder()
