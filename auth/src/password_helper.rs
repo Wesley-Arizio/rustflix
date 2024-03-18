@@ -3,6 +3,7 @@ use argon2::{
     Argon2, PasswordHash, PasswordVerifier,
 };
 
+use crate::auth::AuthServiceError;
 use thiserror::Error;
 
 pub struct PasswordHelper;
@@ -16,6 +17,13 @@ pub enum PasswordHelperError {
 impl From<argon2::password_hash::Error> for PasswordHelperError {
     fn from(value: argon2::password_hash::Error) -> Self {
         PasswordHelperError::PasswordHashingError(value.to_string())
+    }
+}
+
+impl From<PasswordHelperError> for AuthServiceError {
+    fn from(e: PasswordHelperError) -> Self {
+        eprintln!("Password helper error: {:?}", e);
+        Self::InternalServerError
     }
 }
 

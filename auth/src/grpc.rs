@@ -43,7 +43,7 @@ impl Auth for GRPCAuthService {
         let response = CreateCredentialsResponse { user_id: id };
         Ok(Response::new(response))
     }
-
+    // TODO - Remove sign in method and add authenticate
     async fn sign_in(
         &self,
         request: Request<SignInRequest>,

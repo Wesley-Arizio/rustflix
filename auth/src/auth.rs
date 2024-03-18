@@ -29,13 +29,6 @@ impl From<DatabaseError> for AuthServiceError {
     }
 }
 
-impl From<PasswordHelperError> for AuthServiceError {
-    fn from(e: PasswordHelperError) -> Self {
-        eprintln!("Password helper error: {:?}", e);
-        Self::InternalServerError
-    }
-}
-
 fn valid_email(email: &str) -> Result<(), AuthServiceError> {
     let regex = Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
         .map_err(|_| AuthServiceError::InternalServerError)?;
