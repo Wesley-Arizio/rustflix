@@ -1,18 +1,14 @@
 syntax = "proto3";
+import "google/protobuf/empty.proto";
 package auth;
 
 service Auth {
   rpc CreateCredential (CreateCredentialsRequest) returns (CreateCredentialsResponse);
-  rpc SignIn(SignInRequest) returns (SignInResponse);
+  rpc Authenticate(AuthenticateRequest) returns (google.protobuf.Empty);
 }
 
-message SignInRequest {
-  string email = 1;
-  string password = 2;
-}
-
-message SignInResponse {
-  string session_id = 1;
+message AuthenticateRequest {
+  bytes session_id = 1;
 }
 
 message CreateCredentialsRequest {

@@ -1,7 +1,6 @@
 use crate::auth::{AuthService, AuthServiceError};
 use grpc_interfaces::auth::{
-    auth_server::Auth, CreateCredentialsRequest, CreateCredentialsResponse, SignInRequest,
-    SignInResponse,
+    auth_server::Auth, AuthenticateRequest, CreateCredentialsRequest, CreateCredentialsResponse,
 };
 use tonic::{Request, Response, Status};
 
@@ -43,22 +42,13 @@ impl Auth for GRPCAuthService {
         let response = CreateCredentialsResponse { user_id: id };
         Ok(Response::new(response))
     }
-    // TODO - Remove sign in method and add authenticate
-    async fn sign_in(
+
+    async fn authenticate(
         &self,
-        request: Request<SignInRequest>,
-    ) -> Result<Response<SignInResponse>, Status> {
-        let input = request.into_inner();
-        let session_id = self
-            .service
-            .sign_in(&input.email, &input.password)
-            .await
-            .map_err(Status::from)?;
+        request: Request<AuthenticateRequest>,
+    ) -> Result<Response<()>, Status> {
+        self.service.authenticate(&request.into_inner().session_id).await?;
 
-        let response = SignInResponse {
-            session_id: session_id.id,
-        };
-
-        Ok(Response::new(response))
+        Ok(Response::new(()))
     }
 }

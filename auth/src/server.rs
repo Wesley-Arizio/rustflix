@@ -18,7 +18,7 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 
 use serde::{Deserialize, Serialize};
-use tower_sessions::cookie::time::{Duration, OffsetDateTime};
+use tower_sessions::cookie::time::OffsetDateTime;
 
 #[derive(Clone)]
 pub struct AppState {

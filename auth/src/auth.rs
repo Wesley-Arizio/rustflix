@@ -1,5 +1,6 @@
-use crate::password_helper::{PasswordHelper, PasswordHelperError};
-use auth_database::entities::sessions::{CreateSessionsDAO, SessionsRepository};
+use crate::password_helper::PasswordHelper;
+use auth_database::entities::sessions::{CreateSessionsDAO, SessionsBy, SessionsRepository};
+use auth_database::types::Uuid;
 use auth_database::{
     connection::{Pool, Postgres},
     entities::{
@@ -73,6 +74,25 @@ impl From<&SessionsDAO> for SignInResponse {
 impl AuthService {
     pub fn new(db: Arc<Pool<Postgres>>) -> Self {
         Self { db }
+    }
+
+    pub async fn authenticate(&self, session_id: &[u8]) -> Result<(), AuthServiceError> {
+        let uuid = Uuid::from_slice(session_id)
+                .map_err(|_| {
+                    eprintln!("invalid session id format: {:?}", session_id);
+                    AuthServiceError::InternalServerError
+                })?;
+        // TODO - Create access role validation
+        if let Some(session) =
+            SessionsRepository::try_get(&self.db, SessionsBy::CredentialId(uuid)).await?
+        {
+            if Utc::now() > session.expires_at {
+                return Err(AuthServiceError::InvalidCredentials);
+            }
+            return Ok(());
+        }
+
+        Err(AuthServiceError::InvalidCredentials)
     }
 
     pub async fn sign_in(

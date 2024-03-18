@@ -386,6 +386,7 @@ dependencies = [
  "async-trait",
  "auth-database",
  "axum 0.7.4",
+ "bytes",
  "clap",
  "dotenv",
  "futures",
@@ -401,6 +402,7 @@ dependencies = [
  "tonic",
  "tower-http",
  "tower-sessions",
+ "uuid 1.6.1",
 ]
 
 [[package]]
