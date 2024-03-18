@@ -1,13 +1,19 @@
 use crate::password_helper::{PasswordHelper, PasswordHelperError};
 use auth_database::entities::sessions::{CreateSessionsDAO, SessionsRepository};
-use auth_database::types::Utc;
 use auth_database::{
     connection::{Pool, Postgres},
-    entities::credentials::{CreateCredentialsDAO, CredentialsBy, CredentialsRepository},
+    entities::{
+        credentials::{CreateCredentialsDAO, CredentialsBy, CredentialsRepository},
+        sessions::SessionsDAO,
+    },
     traits::{DatabaseError, EntityRepository},
+    types::{DateTime, Utc},
 };
 use regex::Regex;
+use std::sync::Arc;
 use std::time::Duration;
+
+const ONE_DAY_IN_SECONDS: u32 = 60 * 60 * 24;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum AuthServiceError {
@@ -45,15 +51,42 @@ fn valid_email(email: &str) -> Result<(), AuthServiceError> {
 
 #[derive(Debug)]
 pub struct AuthService {
-    db: Pool<Postgres>,
+    db: Arc<Pool<Postgres>>,
+}
+
+impl Clone for AuthService {
+    fn clone(&self) -> Self {
+        Self {
+            db: Arc::clone(&self.db),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct SignInResponse {
+    pub id: String,
+    pub expires_at: DateTime<Utc>,
+}
+
+impl From<&SessionsDAO> for SignInResponse {
+    fn from(value: &SessionsDAO) -> Self {
+        Self {
+            id: value.id.to_string(),
+            expires_at: value.expires_at,
+        }
+    }
 }
 
 impl AuthService {
-    pub fn new(db: Pool<Postgres>) -> Self {
+    pub fn new(db: Arc<Pool<Postgres>>) -> Self {
         Self { db }
     }
 
-    pub async fn sign_in(&self, email: &str, password: &str) -> Result<String, AuthServiceError> {
+    pub async fn sign_in(
+        &self,
+        email: &str,
+        password: &str,
+    ) -> Result<SignInResponse, AuthServiceError> {
         valid_email(email)?;
 
         if let Some(credential) =
@@ -66,13 +99,13 @@ impl AuthService {
             let session = SessionsRepository::insert(
                 &self.db,
                 CreateSessionsDAO {
-                    expires_at: Utc::now() + Duration::from_secs(60 * 60),
+                    expires_at: Utc::now() + Duration::from_secs(ONE_DAY_IN_SECONDS as u64),
                     credential_id: credential.id,
                 },
             )
             .await?;
 
-            Ok(session.id.to_string())
+            Ok((&session).into())
         } else {
             return Err(AuthServiceError::InvalidCredentials);
         }

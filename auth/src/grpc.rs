@@ -55,7 +55,9 @@ impl Auth for GRPCAuthService {
             .await
             .map_err(Status::from)?;
 
-        let response = SignInResponse { session_id };
+        let response = SignInResponse {
+            session_id: session_id.id,
+        };
 
         Ok(Response::new(response))
     }
