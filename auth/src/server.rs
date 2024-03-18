@@ -110,8 +110,7 @@ pub async fn run_server(
     let thread = tokio::spawn(async move {
         let session_store = MemoryStore::default();
         let session_layer = SessionManagerLayer::new(session_store)
-            .with_secure(false)
-            .with_expiry(Expiry::OnInactivity(Duration::seconds(60)));
+            .with_secure(false);
 
         let cors = CorsLayer::new()
             .allow_origin([web_front_end_origin.parse::<HeaderValue>().unwrap()])
