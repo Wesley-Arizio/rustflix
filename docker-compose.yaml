@@ -33,6 +33,12 @@ services:
     ports:
       - 50051:50051
 
+  redis:
+    image: redis
+    container_name: my-redis
+    ports:
+      - "6379:6379"
+
   graphql-core:
     image: rustflix-graphql-core
     depends_on:
