@@ -1,4 +1,4 @@
-use crate::auth::{AuthService, AuthServiceError};
+use crate::auth::AuthService;
 use crate::grpc::GRPCAuthService;
 use auth_database::connection::PgPool;
 use grpc_interfaces::auth::auth_server::AuthServer;
@@ -6,19 +6,19 @@ use std::error::Error;
 use std::sync::Arc;
 use tonic::transport::Server;
 
-use tower_http::cors::CorsLayer;
-use tower_sessions::{Expiry, MemoryStore, Session, SessionManagerLayer};
-
-use axum::body::Body;
-use axum::extract::State;
-use axum::http::header::CONTENT_TYPE;
-use axum::http::{HeaderValue, Method, StatusCode};
-use axum::response::{IntoResponse, Response};
-use axum::routing::{get, post};
-use axum::{Json, Router};
+use actix_cors::Cors;
+use actix_session::config::PersistentSession;
+use actix_session::storage::CookieSessionStore;
+use actix_session::{storage::RedisSessionStore, Session, SessionMiddleware};
+use actix_web::cookie::time::Duration;
+use actix_web::cookie::Key;
+use actix_web::{
+    get, http, post, web, web::Data, App, HttpRequest, HttpResponse, HttpServer, Responder,
+};
 
 use serde::{Deserialize, Serialize};
-use tower_sessions::cookie::time::OffsetDateTime;
+
+const SECS_IN_WEEK: i64 = 60 * 60 * 24 * 7;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -39,61 +39,40 @@ pub struct SignInRequest {
     pub password: String,
 }
 
-impl IntoResponse for AuthServiceError {
-    fn into_response(self) -> Response {
-        let mut res = Response::new(Body::empty());
-        let (status, maybe_body) = match self {
-            AuthServiceError::InvalidInput { message } => (StatusCode::BAD_REQUEST, Some(message)),
-            AuthServiceError::InvalidCredentials => (StatusCode::UNAUTHORIZED, None),
-            AuthServiceError::InternalServerError => (StatusCode::BAD_REQUEST, None),
-        };
-
-        *res.status_mut() = status;
-        if let Some(message) = maybe_body {
-            *res.body_mut() = Body::from(message);
-        }
-
-        res
-    }
-}
-
 const SESSION_KEY: &str = "sid";
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-struct AuthSession(String);
-
+#[post("/signin")]
 async fn sign_in(
+    _req: HttpRequest,
+    state: Data<AppState>,
     session: Session,
-    State(state): State<AppState>,
-    Json(payload): Json<SignInRequest>,
-) -> Result<(), AuthServiceError> {
+    payload: web::Json<SignInRequest>,
+) -> impl Responder {
     let created_session = state
         .service
         .sign_in(&payload.email, &payload.password)
-        .await?;
-
-    session
-        .insert(SESSION_KEY, created_session.id)
         .await
-        .map_err(|_| AuthServiceError::InternalServerError)?;
+        .unwrap();
 
-    let expires_at = OffsetDateTime::from_unix_timestamp(created_session.expires_at.timestamp())
-        .map_err(|_| AuthServiceError::InternalServerError)?;
-    session.set_expiry(Some(Expiry::AtDateTime(expires_at)));
+    if let Err(e) = session.insert(SESSION_KEY, created_session.id) {
+        eprintln!("error inserting session with id {:?} {:?}", created_session.id, e);
+        return HttpResponse::InternalServerError()
+    };
 
-    Ok(())
+    HttpResponse::Ok()
 }
 
-async fn home(session: Session) -> String {
-    let session: AuthSession = session.get(SESSION_KEY).await.unwrap().unwrap_or_default();
-    session.0.to_string()
+#[get("/home")]
+async fn home(_req: HttpRequest, session: Session) -> impl Responder {
+    let session = session.get::<String>(SESSION_KEY).unwrap();
+    println!("session: {:?}", session);
+    "Hello world".to_string()
 }
 
 pub async fn run_server(
     grpc_address: &str,
     database_url: &str,
-    api_address: &str,
-    web_front_end_origin: &str,
+    web_front_end_origin: &str
 ) -> Result<(), Box<dyn Error>> {
     let grpc_address = grpc_address.parse()?;
 
@@ -105,27 +84,51 @@ pub async fn run_server(
 
     let auth_service = AuthService::new(pool);
     let state = AppState::new(&auth_service);
-    let address = api_address.to_owned();
     let web_front_end_origin = web_front_end_origin.to_owned();
+    // let redis_connection_url = redis_connection_url.clone();
     let thread = tokio::spawn(async move {
-        let session_store = MemoryStore::default();
-        let session_layer = SessionManagerLayer::new(session_store).with_secure(false);
+        let redis_connection_url = "redis://localhost:6379";
+        let store = RedisSessionStore::new(redis_connection_url)
+            .await
+            .expect("Could not connect to redis instance");
 
-        let cors = CorsLayer::new()
-            .allow_origin([web_front_end_origin.parse::<HeaderValue>().unwrap()])
-            .allow_methods([Method::GET, Method::POST])
-            .allow_credentials(true)
-            .allow_headers([CONTENT_TYPE]);
+        let app = move || {
+            let key = Key::from(&(0..64).collect::<Vec<_>>());
+            let state = state.clone();
+            let web_front_end_origin = web_front_end_origin.clone();
+            let cors = Cors::default()
+                .allowed_origin(&web_front_end_origin)
+                .allowed_methods(vec!["GET", "POST"])
+                .supports_credentials()
+                .allowed_headers(vec![http::header::CONTENT_TYPE]);
 
-        let app = Router::new()
-            .route("/signin", post(sign_in))
-            .route("/home", get(home))
-            .layer(session_layer)
-            .layer(cors)
-            .with_state(state);
+            let session = SessionMiddleware::builder(store.clone(), key)
+                .session_lifecycle(
+                    PersistentSession::default().session_ttl(Duration::seconds(SECS_IN_WEEK)),
+                )
+                .cookie_domain(Some("localhost".to_string()))
+                .cookie_name(SESSION_KEY.to_string())
+                .cookie_http_only(true)
+                .cookie_path("/".to_string())
+                .cookie_secure(true)
+                .build();
 
-        let listener = tokio::net::TcpListener::bind(&address).await.unwrap();
-        axum::serve(listener, app).await.unwrap();
+            App::new()
+                .wrap(session)
+                .app_data(Data::new(state))
+                .wrap(cors)
+                .service(sign_in)
+                .service(home)
+        };
+
+        HttpServer::new(app)
+            .bind(("0.0.0.0", 3000))
+            .unwrap()
+            .run()
+            .await
+            .unwrap();
+
+        ()
     });
 
     let grpc_auth_service = GRPCAuthService::new(auth_service);

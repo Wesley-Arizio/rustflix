@@ -47,7 +47,9 @@ impl Auth for GRPCAuthService {
         &self,
         request: Request<AuthenticateRequest>,
     ) -> Result<Response<()>, Status> {
-        self.service.authenticate(&request.into_inner().session_id).await?;
+        self.service
+            .authenticate(&request.into_inner().session_id)
+            .await?;
 
         Ok(Response::new(()))
     }

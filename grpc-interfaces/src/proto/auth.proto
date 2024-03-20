@@ -8,7 +8,7 @@ service Auth {
 }
 
 message AuthenticateRequest {
-  bytes session_id = 1;
+  string session_id = 1;
 }
 
 message CreateCredentialsRequest {

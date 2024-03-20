@@ -5,7 +5,9 @@ use core_database::{
     traits::{DatabaseError, EntityRepository},
     types::{DateTime, Utc, Uuid},
 };
-use grpc_interfaces::auth::{auth_client::AuthClient, CreateCredentialsRequest, SignInRequest};
+use grpc_interfaces::auth::{
+    auth_client::AuthClient, AuthenticateRequest, CreateCredentialsRequest,
+};
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
@@ -57,6 +59,7 @@ impl From<DatabaseError> for CoreError {
     }
 }
 
+#[derive(Clone)]
 pub struct Core {
     auth_client: Arc<Mutex<AuthClient<Channel>>>,
     db: Pool<Postgres>,
@@ -77,16 +80,16 @@ impl Core {
 }
 
 impl Core {
-    pub async fn sign_in(&self, email: String, password: String) -> Result<String, CoreError> {
+    pub async fn authenticate(&self, session_id: String) -> Result<(), CoreError> {
         let mut auth_client = self.auth_client.lock().await;
-        let request = SignInRequest { email, password };
+        let request = AuthenticateRequest { session_id };
 
-        let response = auth_client
-            .sign_in(Request::new(request))
+        auth_client
+            .authenticate(Request::new(request))
             .await
             .map(|r| r.into_inner())
             .map_err(CoreError::from)?;
-        Ok(response.session_id)
+        Ok(())
     }
     pub async fn create_account(
         &self,

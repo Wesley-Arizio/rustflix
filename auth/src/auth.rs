@@ -11,6 +11,7 @@ use auth_database::{
     types::{DateTime, Utc},
 };
 use regex::Regex;
+use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -76,22 +77,18 @@ impl AuthService {
         Self { db }
     }
 
-    pub async fn authenticate(&self, session_id: &[u8]) -> Result<(), AuthServiceError> {
-        let uuid = Uuid::from_slice(session_id)
-                .map_err(|_| {
-                    eprintln!("invalid session id format: {:?}", session_id);
-                    AuthServiceError::InternalServerError
-                })?;
+    pub async fn authenticate(&self, session_id: &str) -> Result<(), AuthServiceError> {
+        let uuid = Uuid::from_str(session_id).map_err(|_| {
+            eprintln!("invalid session id format: {:?}", session_id);
+            AuthServiceError::InternalServerError
+        })?;
         // TODO - Create access role validation
-        if let Some(session) =
-            SessionsRepository::try_get(&self.db, SessionsBy::CredentialId(uuid)).await?
-        {
+        if let Some(session) = SessionsRepository::try_get(&self.db, SessionsBy::Id(uuid)).await? {
             if Utc::now() > session.expires_at {
                 return Err(AuthServiceError::InvalidCredentials);
             }
             return Ok(());
         }
-
         Err(AuthServiceError::InvalidCredentials)
     }
 

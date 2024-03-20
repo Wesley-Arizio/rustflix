@@ -1,5 +1,6 @@
 use crate::input::UserInput;
 use crate::output::User;
+use crate::Context;
 use core::service::Core;
 use juniper::{graphql_object, FieldError, FieldResult};
 
@@ -13,22 +14,12 @@ impl MutationRoot {
     }
 }
 
-#[graphql_object()]
+#[graphql_object(context = Context)]
 impl MutationRoot {
-    async fn create_account(&self, user: UserInput) -> FieldResult<User> {
+    async fn create_account(&self, _ctx: &Context, user: UserInput) -> FieldResult<User> {
         let response = self
             .core
             .create_account(user.email, user.password, user.name, user.birthday.0)
-            .await
-            .map_err(|e| FieldError::new(e, juniper::Value::null()))?;
-
-        Ok(response.into())
-    }
-
-    async fn sign_in(&self, email: String, password: String) -> FieldResult<String> {
-        let response = self
-            .core
-            .sign_in(email, password)
             .await
             .map_err(|e| FieldError::new(e, juniper::Value::null()))?;
 

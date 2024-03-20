@@ -29,13 +29,8 @@ async fn main() {
     dotenv::dotenv().unwrap();
     let args = Cli::parse();
 
-    if let Err(e) = server::run_server(
-        &args.grpc_port,
-        &args.database_url,
-        &args.auth_api_address,
-        &args.web_front_end_url,
-    )
-    .await
+    if let Err(e) =
+        server::run_server(&args.grpc_port, &args.database_url, &args.web_front_end_url).await
     {
         eprintln!("Error running auth microservice: {:?}", e);
         if let Some(source) = e.source() {
