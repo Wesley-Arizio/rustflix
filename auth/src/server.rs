@@ -26,9 +26,9 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new(auth_service: &AuthService) -> Self {
+    pub fn new(auth_service: AuthService) -> Self {
         Self {
-            service: auth_service.clone(),
+            service: auth_service,
         }
     }
 }
@@ -60,6 +60,59 @@ async fn sign_in(
     HttpResponse::Ok()
 }
 
+struct Api;
+
+impl Api {
+    async fn start(
+        auth_service: AuthService,
+        redis_session_url: String,
+        session_private_key: String,
+        port: u16,
+        web_front_end_origin: String,
+    ) -> () {
+        let store = RedisSessionStore::new(redis_session_url)
+            .await
+            .expect("Could not connect to redis instance");
+        let state = AppState::new(auth_service);
+        let app = move || {
+            let state = state.clone();
+            let key = Key::derive_from(session_private_key.as_ref());
+            let web_front_end_origin = web_front_end_origin.clone();
+            let cors = Cors::default()
+                .allowed_origin(&web_front_end_origin)
+                .allowed_methods(vec!["GET", "POST"])
+                .supports_credentials()
+                .allowed_headers(vec![http::header::CONTENT_TYPE]);
+
+            let session = SessionMiddleware::builder(store.clone(), key)
+                .session_lifecycle(
+                    PersistentSession::default().session_ttl(Duration::seconds(SECS_IN_WEEK)),
+                )
+                .cookie_domain(Some("localhost".to_string()))
+                .cookie_name(SESSION_KEY.to_string())
+                .cookie_http_only(true)
+                .cookie_path("/".to_string())
+                .cookie_secure(true)
+                .build();
+
+            App::new()
+                .app_data(Data::new(state))
+                .wrap(session)
+                .wrap(cors)
+                .service(sign_in)
+                .service(home)
+        };
+
+        HttpServer::new(app)
+            .bind(("0.0.0.0", port))
+            .unwrap()
+            .run()
+            .await
+            .unwrap();
+        ()
+    }
+}
+
 #[get("/home")]
 async fn home(_req: HttpRequest, session: Session) -> impl Responder {
     let session = session.get::<String>(SESSION_KEY).unwrap();
@@ -84,51 +137,19 @@ pub async fn run_server(
     );
 
     let auth_service = AuthService::new(pool);
-    let state = AppState::new(&auth_service);
     let web_front_end_origin = web_front_end_origin.to_owned();
     let redis_session_url = redis_session_url.to_owned();
     let session_private_key = session_private_key.to_owned();
+    let service = auth_service.clone();
     let thread = tokio::spawn(async move {
-        let store = RedisSessionStore::new(&redis_session_url)
-            .await
-            .expect("Could not connect to redis instance");
-
-        let app = move || {
-            let key = Key::derive_from(session_private_key.as_ref());
-            let state = state.clone();
-            let web_front_end_origin = web_front_end_origin.clone();
-            let cors = Cors::default()
-                .allowed_origin(&web_front_end_origin)
-                .allowed_methods(vec!["GET", "POST"])
-                .supports_credentials()
-                .allowed_headers(vec![http::header::CONTENT_TYPE]);
-
-            let session = SessionMiddleware::builder(store.clone(), key)
-                .session_lifecycle(
-                    PersistentSession::default().session_ttl(Duration::seconds(SECS_IN_WEEK)),
-                )
-                .cookie_domain(Some("localhost".to_string()))
-                .cookie_name(SESSION_KEY.to_string())
-                .cookie_http_only(true)
-                .cookie_path("/".to_string())
-                .cookie_secure(true)
-                .build();
-
-            App::new()
-                .wrap(session)
-                .app_data(Data::new(state))
-                .wrap(cors)
-                .service(sign_in)
-                .service(home)
-        };
-
-        HttpServer::new(app)
-            .bind(("0.0.0.0", auth_api_port))
-            .unwrap()
-            .run()
-            .await
-            .unwrap();
-
+        Api::start(
+            service,
+            redis_session_url,
+            session_private_key,
+            auth_api_port,
+            web_front_end_origin,
+        )
+        .await;
         ()
     });
 
