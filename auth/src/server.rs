@@ -8,7 +8,6 @@ use tonic::transport::Server;
 
 use actix_cors::Cors;
 use actix_session::config::PersistentSession;
-use actix_session::storage::CookieSessionStore;
 use actix_session::{storage::RedisSessionStore, Session, SessionMiddleware};
 use actix_web::cookie::time::Duration;
 use actix_web::cookie::Key;
@@ -16,9 +15,10 @@ use actix_web::{
     get, http, post, web, web::Data, App, HttpRequest, HttpResponse, HttpServer, Responder,
 };
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 const SECS_IN_WEEK: i64 = 60 * 60 * 24 * 7;
+const SESSION_KEY: &str = "sid";
 
 #[derive(Clone)]
 pub struct AppState {
@@ -39,8 +39,6 @@ pub struct SignInRequest {
     pub password: String,
 }
 
-const SESSION_KEY: &str = "sid";
-
 #[post("/signin")]
 async fn sign_in(
     _req: HttpRequest,
@@ -55,8 +53,8 @@ async fn sign_in(
         .unwrap();
 
     if let Err(e) = session.insert(SESSION_KEY, created_session.id) {
-        eprintln!("error inserting session with id {:?} {:?}", created_session.id, e);
-        return HttpResponse::InternalServerError()
+        eprintln!("error inserting session {:?}", e);
+        return HttpResponse::InternalServerError();
     };
 
     HttpResponse::Ok()
@@ -72,7 +70,10 @@ async fn home(_req: HttpRequest, session: Session) -> impl Responder {
 pub async fn run_server(
     grpc_address: &str,
     database_url: &str,
-    web_front_end_origin: &str
+    web_front_end_origin: &str,
+    redis_session_url: &str,
+    session_private_key: &str,
+    auth_api_port: u16,
 ) -> Result<(), Box<dyn Error>> {
     let grpc_address = grpc_address.parse()?;
 
@@ -85,15 +86,15 @@ pub async fn run_server(
     let auth_service = AuthService::new(pool);
     let state = AppState::new(&auth_service);
     let web_front_end_origin = web_front_end_origin.to_owned();
-    // let redis_connection_url = redis_connection_url.clone();
+    let redis_session_url = redis_session_url.to_owned();
+    let session_private_key = session_private_key.to_owned();
     let thread = tokio::spawn(async move {
-        let redis_connection_url = "redis://localhost:6379";
-        let store = RedisSessionStore::new(redis_connection_url)
+        let store = RedisSessionStore::new(&redis_session_url)
             .await
             .expect("Could not connect to redis instance");
 
         let app = move || {
-            let key = Key::from(&(0..64).collect::<Vec<_>>());
+            let key = Key::derive_from(session_private_key.as_ref());
             let state = state.clone();
             let web_front_end_origin = web_front_end_origin.clone();
             let cors = Cors::default()
@@ -122,7 +123,7 @@ pub async fn run_server(
         };
 
         HttpServer::new(app)
-            .bind(("0.0.0.0", 3000))
+            .bind(("0.0.0.0", auth_api_port))
             .unwrap()
             .run()
             .await
@@ -136,8 +137,6 @@ pub async fn run_server(
         .add_service(AuthServer::new(grpc_auth_service))
         .serve(grpc_address)
         .await?;
-
     thread.await.expect("Could not start auth api");
-
     Ok(())
 }

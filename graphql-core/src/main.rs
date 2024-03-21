@@ -29,6 +29,7 @@ pub mod schemas;
 use core::service::Core;
 
 const SECS_IN_WEEK: i64 = 60 * 60 * 24 * 7;
+const SESSION_KEY: &str = "sid";
 
 /// GraphiQL playground UI
 #[route("/playground", method = "GET")]
@@ -59,6 +60,12 @@ struct Args {
     /// Auth microservice grpc port
     #[arg(env = "GRAPHQL_AUTH_GRPC_PORT")]
     auth_grpc_port: String,
+    /// URL to connect with redis instance
+    #[arg(env = "REDIS_SESSION_URL")]
+    redis_session_storage_url: String,
+    /// Private key for session storage
+    #[arg(env = "PRIVATE_SESSION_KEY")]
+    session_private_key: String,
 }
 
 #[derive(Clone)]
@@ -83,10 +90,9 @@ async fn main() -> Result<()> {
     dotenv::dotenv().expect("Could not parse environment variables");
     let args = Args::parse();
 
-    let redis_connection_string = "redis://localhost:6379";
-    let store = RedisSessionStore::new(redis_connection_string)
+    let store = RedisSessionStore::new(args.redis_session_storage_url)
         .await
-        .unwrap();
+        .expect("Could not initialize redis instance");
 
     let pool = PgPool::connect(&args.database_url)
         .await
@@ -94,7 +100,7 @@ async fn main() -> Result<()> {
     let core = Core::new(args.auth_grpc_port, pool).await;
     let schema = Arc::new(create_schema(core));
     let app = move || {
-        let key = Key::from(&(0..64).collect::<Vec<_>>());
+        let key = Key::derive_from(args.session_private_key.as_ref());
         let cors = Cors::default()
             .supports_credentials()
             .allowed_headers(vec![http::header::CONTENT_TYPE]);
@@ -103,7 +109,7 @@ async fn main() -> Result<()> {
                 PersistentSession::default().session_ttl(Duration::seconds(SECS_IN_WEEK)),
             )
             .cookie_domain(Some("localhost".to_string()))
-            .cookie_name("sid".to_string())
+            .cookie_name(SESSION_KEY.to_string())
             .cookie_http_only(true)
             .cookie_path("/".to_string())
             .cookie_secure(true)
