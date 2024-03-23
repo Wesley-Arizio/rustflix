@@ -10,6 +10,7 @@ use auth_database::{
     traits::{DatabaseError, EntityRepository},
     types::{DateTime, Utc},
 };
+use mockall::mock;
 use regex::Regex;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -45,19 +46,6 @@ fn valid_email(email: &str) -> Result<(), AuthServiceError> {
 }
 
 #[derive(Debug)]
-pub struct AuthService {
-    db: Arc<Pool<Postgres>>,
-}
-
-impl Clone for AuthService {
-    fn clone(&self) -> Self {
-        Self {
-            db: Arc::clone(&self.db),
-        }
-    }
-}
-
-#[derive(Debug)]
 pub struct SignInResponse {
     pub id: String,
     pub expires_at: DateTime<Utc>,
@@ -72,13 +60,44 @@ impl From<&SessionsDAO> for SignInResponse {
     }
 }
 
+#[derive(Debug)]
+pub struct AuthService {
+    db: Arc<Pool<Postgres>>,
+}
+
+#[async_trait::async_trait]
+pub trait AuthServiceTrait: Send + Sync + Clone {
+    async fn authenticate(&self, session_id: String) -> Result<(), AuthServiceError>;
+    async fn sign_in(
+        &self,
+        email: String,
+        password: String,
+    ) -> Result<SignInResponse, AuthServiceError>;
+    async fn create_account(
+        &self,
+        email: String,
+        password: String,
+    ) -> Result<String, AuthServiceError>;
+}
+
 impl AuthService {
     pub fn new(db: Arc<Pool<Postgres>>) -> Self {
         Self { db }
     }
+}
 
-    pub async fn authenticate(&self, session_id: &str) -> Result<(), AuthServiceError> {
-        let uuid = Uuid::from_str(session_id).map_err(|_| {
+impl Clone for AuthService {
+    fn clone(&self) -> Self {
+        Self {
+            db: Arc::clone(&self.db),
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl AuthServiceTrait for AuthService {
+    async fn authenticate(&self, session_id: String) -> Result<(), AuthServiceError> {
+        let uuid = Uuid::from_str(&session_id).map_err(|_| {
             eprintln!("invalid session id format: {:?}", session_id);
             AuthServiceError::InternalServerError
         })?;
@@ -92,17 +111,17 @@ impl AuthService {
         Err(AuthServiceError::InvalidCredentials)
     }
 
-    pub async fn sign_in(
+    async fn sign_in(
         &self,
-        email: &str,
-        password: &str,
+        email: String,
+        password: String,
     ) -> Result<SignInResponse, AuthServiceError> {
-        valid_email(email)?;
+        valid_email(&email)?;
 
         if let Some(credential) =
-            CredentialsRepository::try_get(&self.db, CredentialsBy::Email(email.to_owned())).await?
+            CredentialsRepository::try_get(&self.db, CredentialsBy::Email(email)).await?
         {
-            if !PasswordHelper::verify(&credential.password, password)? {
+            if !PasswordHelper::verify(&credential.password, &password)? {
                 return Err(AuthServiceError::InvalidCredentials);
             };
 
@@ -121,28 +140,50 @@ impl AuthService {
         }
     }
 
-    pub async fn create_account(
+    async fn create_account(
         &self,
-        email: &str,
-        password: &str,
+        email: String,
+        password: String,
     ) -> Result<String, AuthServiceError> {
-        valid_email(email)?;
-        let exists =
-            CredentialsRepository::try_get(&self.db, CredentialsBy::Email(email.to_owned()))
-                .await?
-                .is_some();
+        valid_email(&email)?;
+        let exists = CredentialsRepository::try_get(&self.db, CredentialsBy::Email(email.clone()))
+            .await?
+            .is_some();
 
         if exists {
             return Err(AuthServiceError::InvalidCredentials);
         };
 
         let dao = CreateCredentialsDAO {
-            email: email.to_owned(),
+            email: email,
             password: PasswordHelper::hash_password(&password)?,
         };
 
         let res = CredentialsRepository::insert(&self.db, dao).await?;
 
         Ok(res.id.to_string())
+    }
+}
+
+mock! {
+    pub AuthService {}
+
+    #[async_trait::async_trait]
+    impl AuthServiceTrait for AuthService {
+        async fn authenticate(&self, session_id: String) -> Result<(), AuthServiceError>;
+        async fn sign_in(
+            &self,
+            email: String,
+            password: String,
+        ) -> Result<SignInResponse, AuthServiceError>;
+        async fn create_account(
+            &self,
+            email: String,
+            password: String,
+        ) -> Result<String, AuthServiceError>;
+    }
+
+    impl Clone for AuthService {
+        fn clone(&self) -> Self;
     }
 }

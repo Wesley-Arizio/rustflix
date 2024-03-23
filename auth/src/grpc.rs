@@ -1,4 +1,4 @@
-use crate::auth::{AuthService, AuthServiceError};
+use crate::auth::{AuthService, AuthServiceError, AuthServiceTrait};
 use grpc_interfaces::auth::{
     auth_server::Auth, AuthenticateRequest, CreateCredentialsRequest, CreateCredentialsResponse,
 };
@@ -36,7 +36,7 @@ impl Auth for GRPCAuthService {
         let input = request.into_inner();
         let id = self
             .service
-            .create_account(&input.email, &input.password)
+            .create_account(input.email, input.password)
             .await
             .map_err(Status::from)?;
         let response = CreateCredentialsResponse { user_id: id };
@@ -48,7 +48,7 @@ impl Auth for GRPCAuthService {
         request: Request<AuthenticateRequest>,
     ) -> Result<Response<()>, Status> {
         self.service
-            .authenticate(&request.into_inner().session_id)
+            .authenticate(request.into_inner().session_id)
             .await?;
 
         Ok(Response::new(()))
