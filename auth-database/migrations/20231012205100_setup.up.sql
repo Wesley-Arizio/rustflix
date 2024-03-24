@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS credentials (
     id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR NOT NULL,
+    email VARCHAR NOT NULL UNIQUE,
     password VARCHAR NOT NULL,
     active BOOLEAN DEFAULT TRUE
 );

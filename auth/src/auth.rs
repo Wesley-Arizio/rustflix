@@ -99,7 +99,9 @@ impl AuthServiceTrait for AuthService {
     async fn authenticate(&self, session_id: String) -> Result<(), AuthServiceError> {
         let uuid = Uuid::from_str(&session_id).map_err(|_| {
             eprintln!("invalid session id format: {:?}", session_id);
-            AuthServiceError::InternalServerError
+            AuthServiceError::InvalidInput {
+                message: "invalid session id format".to_string(),
+            }
         })?;
         // TODO - Create access role validation
         if let Some(session) = SessionsRepository::try_get(&self.db, SessionsBy::Id(uuid)).await? {
@@ -155,7 +157,7 @@ impl AuthServiceTrait for AuthService {
         };
 
         let dao = CreateCredentialsDAO {
-            email: email,
+            email,
             password: PasswordHelper::hash_password(&password)?,
         };
 
@@ -185,5 +187,169 @@ mock! {
 
     impl Clone for AuthService {
         fn clone(&self) -> Self;
+    }
+}
+
+#[cfg(feature = "integration")]
+#[cfg(test)]
+mod test {
+    use crate::auth::{AuthService, AuthServiceError, AuthServiceTrait};
+    use crate::password_helper::PasswordHelper;
+    use auth_database::connection::{PgPool, Pool, Postgres};
+    use auth_database::entities::credentials::{CreateCredentialsDAO, CredentialsRepository};
+    use auth_database::entities::sessions::{CreateSessionsDAO, SessionsRepository};
+    use auth_database::traits::EntityRepository;
+    use auth_database::types::Utc;
+    use std::sync::Arc;
+    use std::time::Duration;
+
+    pub async fn setup_test() -> (AuthService, Arc<Pool<Postgres>>) {
+        dotenv::dotenv().ok();
+        let url =
+            std::env::var("TEST_AUTH_DATABASE_URL").expect("TEST_AUTH_DATABASE_URL must be set");
+        let pool = Arc::new(PgPool::connect(&url).await.unwrap());
+        let auth_service = AuthService::new(pool.clone());
+        (auth_service, pool)
+    }
+    #[tokio::test]
+    async fn test_authenticate() {
+        let (auth_service, pool) = setup_test().await;
+
+        // Invalid uuid
+        let result = auth_service
+            .authenticate("f1ac1576-bd47-4fd3-a9af 49cd400c2cd7".to_string())
+            .await
+            .unwrap_err();
+        assert_eq!(
+            AuthServiceError::InvalidInput {
+                message: "invalid session id format".to_string()
+            },
+            result
+        );
+
+        // session not found
+        let result = auth_service
+            .authenticate("f1ac1576-bd47-4fd3-a9af-49cd400c2cd7".to_string())
+            .await
+            .unwrap_err();
+        assert_eq!(AuthServiceError::InvalidCredentials, result);
+
+        // session_expired
+        let credential = CredentialsRepository::insert(
+            &pool,
+            CreateCredentialsDAO {
+                email: "test@gmail.com".to_string(),
+                password: "123456".to_string(),
+            },
+        )
+        .await
+        .unwrap();
+        let session = SessionsRepository::insert(
+            &pool,
+            CreateSessionsDAO {
+                credential_id: credential.id,
+                expires_at: Utc::now() + Duration::from_secs(10),
+            },
+        )
+        .await
+        .unwrap();
+
+        tokio::time::sleep(Duration::from_secs(30)).await;
+
+        let result = auth_service
+            .authenticate(session.id.to_string())
+            .await
+            .unwrap_err();
+        assert_eq!(AuthServiceError::InvalidCredentials, result);
+
+        // success
+        let session = SessionsRepository::insert(
+            &pool,
+            CreateSessionsDAO {
+                credential_id: credential.id,
+                expires_at: Utc::now() + Duration::from_secs(60),
+            },
+        )
+        .await
+        .unwrap();
+
+        let result = auth_service.authenticate(session.id.to_string()).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_signin() {
+        let (auth_service, pool) = setup_test().await;
+
+        // invalid email
+        let result = auth_service
+            .sign_in("test.com".to_string(), "123456".to_string())
+            .await
+            .unwrap_err();
+        assert_eq!(
+            AuthServiceError::InvalidInput {
+                message: "invalid email".to_string()
+            },
+            result
+        );
+
+        // credential not found
+        let result = auth_service
+            .sign_in("t@gmail.com".to_string(), "123456".to_string())
+            .await
+            .unwrap_err();
+        assert_eq!(AuthServiceError::InvalidCredentials, result);
+
+        // invalid_password
+        let hash = PasswordHelper::hash_password("123456").unwrap();
+        let credential = CredentialsRepository::insert(
+            &pool,
+            CreateCredentialsDAO {
+                email: "test22@gmail.com".to_string(),
+                password: hash.to_string(),
+            },
+        )
+        .await
+        .unwrap();
+        let result = auth_service
+            .sign_in("test22@gmail.com".to_string(), "other password".to_string())
+            .await
+            .unwrap_err();
+        assert_eq!(AuthServiceError::InvalidCredentials, result);
+
+        // success
+        let result = auth_service
+            .sign_in("test22@gmail.com".to_string(), "123456".to_string())
+            .await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn create_account_invalid_email() {
+        let (auth_service, pool) = setup_test().await;
+        // invalid email
+        let result = auth_service
+            .create_account("test.com".to_string(), "123456".to_string())
+            .await
+            .unwrap_err();
+        assert_eq!(
+            AuthServiceError::InvalidInput {
+                message: "invalid email".to_string()
+            },
+            result
+        );
+
+        // create account success
+        let result = auth_service
+            .create_account("test3@gmail.com".to_string(), "123456".to_string())
+            .await;
+        assert!(result.is_ok());
+
+        // account already exists
+        let result = auth_service
+            .create_account("test3@gmail.com".to_string(), "123456".to_string())
+            .await
+            .unwrap_err();
+        assert_eq!(AuthServiceError::InvalidCredentials, result);
     }
 }

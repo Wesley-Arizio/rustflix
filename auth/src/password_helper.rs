@@ -48,7 +48,6 @@ impl PasswordHelper {
     }
 }
 
-#[cfg(not(feature = "integration"))]
 #[cfg(test)]
 mod tests {
     use super::*;
