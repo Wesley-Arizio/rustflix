@@ -94,6 +94,13 @@ impl EntityRepository<Postgres, UserDAO, UserDAO, UpdateUserDAO, UserBy, UsersWh
             }
         }
     }
+
+    async fn get_all(
+        _db: &Pool<Postgres>,
+        _key: UsersWhere,
+    ) -> Result<Vec<UserDAO>, DatabaseError> {
+        todo!()
+    }
 }
 
 #[cfg(feature = "integration")]

@@ -4,3 +4,9 @@ CREATE TABLE IF NOT EXISTS users (
   active BOOLEAN DEFAULT TRUE,
   birthday TIMESTAMPTZ NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS movies (
+    id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    title VARCHAR(60) NOT NULL UNIQUE,
+    description TEXT NOT NULL
+);

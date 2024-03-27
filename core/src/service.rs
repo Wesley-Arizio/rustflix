@@ -1,4 +1,6 @@
+use crate::dto::movie::MovieDTO;
 use crate::dto::user::UserDTO;
+use core_database::entities::movies::{MovieBy, MovieRepository, MoviesWhere};
 use core_database::{
     connection::{Pool, Postgres},
     entities::users::{UserDAO, UserRepository},
@@ -91,6 +93,35 @@ impl Core {
             .map_err(CoreError::from)?;
         Ok(())
     }
+
+    pub async fn list_movies(
+        &self,
+        session_id: String,
+        offset: u32,
+        limit: u32,
+    ) -> Result<Vec<MovieDTO>, CoreError> {
+        self.authenticate(session_id).await?;
+
+        let movies = MovieRepository::get_all(&self.db, MoviesWhere::Page { offset, limit })
+            .await?
+            .into_iter()
+            .map(MovieDTO::from)
+            .collect::<Vec<MovieDTO>>();
+
+        Ok(movies)
+    }
+
+    pub async fn movie(
+        &self,
+        session_id: String,
+        movie_id: Uuid,
+    ) -> Result<Option<MovieDTO>, CoreError> {
+        self.authenticate(session_id).await?;
+        Ok(MovieRepository::try_get(&self.db, MovieBy::Id(movie_id))
+            .await?
+            .map(MovieDTO::from))
+    }
+
     pub async fn create_account(
         &self,
         email: String,
@@ -108,10 +139,15 @@ impl Core {
             .map(|r| r.into_inner())
             .map_err(CoreError::from)?;
 
+        let id = Uuid::from_str(&response.user_id).map_err(|e| {
+            eprintln!("{:?}", e);
+            CoreError::InternalServerError
+        })?;
+
         let user = UserRepository::insert(
             &self.db,
             UserDAO {
-                id: Uuid::from_str(&response.user_id).unwrap(),
+                id,
                 birthday,
                 active: true,
                 name,
@@ -123,5 +159,3 @@ impl Core {
         Ok(user.into())
     }
 }
-
-// TODO - Implement unit or integration tests

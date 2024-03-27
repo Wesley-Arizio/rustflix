@@ -39,3 +39,11 @@ pub struct UserInput {
     pub password: String,
     pub birthday: Birthday,
 }
+
+// TODO - Create scalar type for non negative numbers
+#[derive(GraphQLInputObject, Debug)]
+#[graphql(description = "Pagination Input")]
+pub struct PaginateInput {
+    pub offset: i32,
+    pub limit: i32,
+}

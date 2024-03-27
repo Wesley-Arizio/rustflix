@@ -51,4 +51,5 @@ pub trait EntityRepository<
     ) -> Result<Entity, DatabaseError>;
     async fn get(db: &Pool<Db>, key: QueryOne) -> Result<Entity, DatabaseError>;
     async fn try_get(db: &Pool<Db>, key: QueryOne) -> Result<Option<Entity>, DatabaseError>;
+    async fn get_all(db: &Pool<Db>, key: QueryMany) -> Result<Vec<Entity>, DatabaseError>;
 }
