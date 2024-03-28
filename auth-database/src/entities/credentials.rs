@@ -151,6 +151,13 @@ impl
             .map_err(DatabaseError::from),
         }
     }
+
+    async fn get_all(
+        _db: &Pool<Postgres>,
+        _key: CredentialsWhere,
+    ) -> Result<Vec<CredentialsDAO>, DatabaseError> {
+        todo!()
+    }
 }
 
 #[cfg(feature = "integration")]

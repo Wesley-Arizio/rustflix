@@ -127,6 +127,13 @@ impl
             }
         }
     }
+
+    async fn get_all(
+        _db: &Pool<Postgres>,
+        _key: SessionsWhere,
+    ) -> Result<Vec<SessionsDAO>, DatabaseError> {
+        todo!()
+    }
 }
 
 #[cfg(feature = "integration")]

@@ -10,3 +10,7 @@ core-database = { path = "../core-database" }
 grpc-interfaces = { path = "../grpc-interfaces" }
 tonic = "0.10.2"
 tokio =  {version = "1.35.0", features = ["sync"]}
+
+[features]
+default = []
+integration = []

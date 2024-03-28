@@ -3,7 +3,7 @@ use crate::Context;
 use core::{dto::movie::MovieDTO, service::Core};
 use database::types::Uuid;
 use juniper::{graphql_object, FieldError, FieldResult, Value};
-use uuid::Uuid;
+use std::str::FromStr;
 
 pub struct QueryRoot {
     pub core: Core,
@@ -71,12 +71,8 @@ impl QueryRoot {
         if let Some(session) = &ctx.session {
             if let Ok(Some(cookie)) = session.get::<String>("sid") {
                 let uuid = Uuid::from_str(&movie_id).unwrap();
-                let movie = self
-                    .core
-                    .movie(cookie.value(), uuid)
-                    .await?
-                    .map(Movie::from);
-                Ok(Some(movie))
+                let movie = self.core.movie(cookie, uuid).await?.map(Movie::from);
+                Ok(movie)
             } else {
                 Err(FieldError::new("Invalid Credentials", Value::Null))
             }
