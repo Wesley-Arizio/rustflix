@@ -158,7 +158,7 @@ mod tests {
         let response = CredentialsRepository::insert(
             &pool,
             CreateCredentialsDAO {
-                email: "akira".to_string(),
+                email: "Kira".to_string(),
                 password: String::from("password"),
             },
         )

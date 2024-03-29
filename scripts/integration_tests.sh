@@ -16,7 +16,7 @@ if docker-compose -f "$DOCKER_COMPOSE_FILE" ps | grep -q "Up"; then
 fi
 
 # Start the container using Docker Compose
-docker-compose -f "$DOCKER_COMPOSE_FILE" up -d
+docker-compose -f "$DOCKER_COMPOSE_FILE" up -d auth_postgres postgres
 
 # Check if the container started successfully
 if [ $? -eq 0 ]; then
@@ -26,10 +26,13 @@ if [ $? -eq 0 ]; then
     sleep 10
 
     # run migrations in core database
-    cd ../database/ && sqlx migrate run --database-url $SCRIPTS_CORE_DATABASE_URL
+    cd ../core-database && sqlx migrate run --database-url $SCRIPTS_CORE_DATABASE_URL
 
-    # run e2e tests
-    cd ../tests/ && k6 run ./create_credential.js
+    # run migrations in auth database
+    cd ../auth-database && sqlx migrate run --database-url $SCRIPTS_AUTH_DATABASE_URL
+
+    # run integration tests
+    cd ../ && cargo t --workspace --exclude grpc-interfaces --exclude database  --features integration
 else
     echo "Failed to start the container."
 fi

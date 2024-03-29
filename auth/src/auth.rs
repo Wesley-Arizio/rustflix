@@ -302,7 +302,7 @@ mod test {
 
         // invalid_password
         let hash = PasswordHelper::hash_password("123456").unwrap();
-        let credential = CredentialsRepository::insert(
+        let _ = CredentialsRepository::insert(
             &pool,
             CreateCredentialsDAO {
                 email: "test22@gmail.com".to_string(),
@@ -326,7 +326,7 @@ mod test {
 
     #[tokio::test]
     async fn create_account_invalid_email() {
-        let (auth_service, pool) = setup_test().await;
+        let (auth_service, _) = setup_test().await;
         // invalid email
         let result = auth_service
             .create_account("test.com".to_string(), "123456".to_string())

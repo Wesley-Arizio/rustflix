@@ -125,13 +125,10 @@ impl EntityRepository<Postgres, MovieDAO, CreateMovieDAO, UpdateMovieDAO, MovieB
 mod tests {
     use crate::connection::PgPool;
     use crate::entities::movies::{
-        CreateMovieDAO, MovieBy, MovieDAO, MovieRepository, MoviesWhere, UpdateMovieDAO,
+        CreateMovieDAO, MovieBy, MovieRepository, MoviesWhere, UpdateMovieDAO,
     };
-    use crate::entities::users::{UpdateUserDAO, UserBy, UserDAO, UserRepository};
     use crate::traits::EntityRepository;
     use dotenv;
-    use sqlx::types::{chrono::Utc, uuid::Uuid};
-
     #[tokio::test]
     async fn test_db() {
         dotenv::dotenv().ok();
@@ -151,8 +148,7 @@ mod tests {
         .expect("Could not create movie");
 
         // list movie
-
-        let movie2 = MovieRepository::insert(
+        let _ = MovieRepository::insert(
             &pool,
             CreateMovieDAO {
                 title: "Doctor strange".to_string(),
