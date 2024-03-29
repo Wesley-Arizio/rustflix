@@ -3,6 +3,12 @@
 This project is a movie catalog API, built to learn how to work with microservices in rust.
 On top of that, it also counts with a cookie-based authentication to ensure security.
 
+The project contain unit and integration tests to run them:
+```shell
+cargo t # unit tests
+cd scripts && ./integration_tests.sh # integration tests, to run you start docker on your machine
+```
+
 ### Technologies
  
  - Rust
